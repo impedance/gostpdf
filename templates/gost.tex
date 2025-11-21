@@ -1,0 +1,193 @@
+% gost.tex — шаблон ROSA ГОСТ для Pandoc
+
+\documentclass[$fontsize$]{$documentclass$}
+
+% ========= Базовые пакеты =========
+\usepackage{ifxetex,ifluatex}
+\usepackage{ifthen}
+\usepackage{calc}
+\usepackage{polyglossia}
+\setmainlanguage{russian}
+\setotherlanguage{english}
+
+\usepackage{fontspec}
+\setmainfont{$mainfont$}
+\setsansfont{$mainfont$}
+\setmonofont{$monofont$}
+
+\usepackage{geometry}
+\geometry{
+  $geometry$
+}
+
+\usepackage{setspace}
+\setstretch{$lineheight$}
+
+\usepackage{microtype}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{tocloft}
+\usepackage{hyperref}
+\hypersetup{
+  unicode=true,
+  colorlinks=false,
+  pdfborder={0 0 0},
+  pdftitle={$title$},
+  pdfauthor={$author$}
+}
+
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{listings}
+
+% ========= Параграфы =========
+\setlength{\parindent}{$parindent$}
+\setlength{\parskip}{0pt}
+
+% ========= Колонтитулы =========
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[C]{$headercenter$}
+\fancyfoot[C]{\thepage}
+
+% ========= Заголовки =========
+% H1 — все прописные, по центру, с новой страницы
+\titleformat{\section}
+  {\bfseries\fontsize{$h1size$}{$h1baselineskip$}\selectfont}
+  {\thesection}{1em}{\centering\MakeUppercase}
+\titlespacing*{\section}{0pt}{30pt}{18pt}
+
+% H2
+\titleformat{\subsection}
+  {\normalfont\fontsize{$h2size$}{$h2baselineskip$}\selectfont}
+  {\thesubsection}{1em}{}
+\titlespacing*{\subsection}{0pt}{24pt}{12pt}
+
+% H3
+\titleformat{\subsubsection}
+  {\bfseries\fontsize{$h3size$}{$h3baselineskip$}\selectfont}
+  {\thesubsubsection}{1em}{}
+\titlespacing*{\subsubsection}{0pt}{18pt}{12pt}
+
+% H4–H6 можно при желании донастроить аналогично
+
+% ========= Списки =========
+% Нумерованный список с русскими буквами: а), б), в) …
+\AddEnumerateCounter{\asbuk}{\russian@alph}{щ}
+\setlist[enumerate,1]{
+  label=\asbuk*) ,
+  leftmargin=1.25cm,
+  itemindent=0pt,
+  labelsep=0.5em,
+  topsep=0pt,
+  parsep=0pt,
+  itemsep=6pt
+}
+
+% Вложенные списки с маркером "—", отступ 1.85 см
+\setlist[itemize,1]{
+  label=---,
+  leftmargin=1.85cm,
+  itemindent=0pt,
+  topsep=0pt,
+  parsep=0pt,
+  itemsep=6pt
+}
+
+% ========= Таблицы и подписи =========
+\captionsetup[table]{
+  font=normalsize,
+  justification=justified,
+  singlelinecheck=false,
+  skip=12pt
+}
+\captionsetup[figure]{
+  font=normalsize,
+  justification=centering,
+  skip=18pt
+}
+
+% Формат подписей "Таблица N – ..." и "Рисунок N – ..."
+\renewcommand{\tablename}{Таблица}
+\renewcommand{\figurename}{Рисунок}
+\renewcommand{\thetable}{\arabic{table}}
+\renewcommand{\thefigure}{\arabic{figure}}
+\DeclareCaptionLabelFormat{dash}{#1~#2~--}
+\captionsetup[table]{labelformat=dash}
+\captionsetup[figure]{labelformat=dash}
+
+% ========= Области кода =========
+\lstset{
+  basicstyle=\ttfamily\fontsize{$codefontsize$}{$codebaselineskip$}\selectfont,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false,
+  breaklines=true,
+  frame=single,
+  xleftmargin=1.25cm,
+  framexleftmargin=1em,
+  aboveskip=6pt,
+  belowskip=6pt
+}
+
+% Pandoc будет использовать lstlisting для блоков кода
+$if(listings)$
+$endif$
+
+% ========= Примечания =========
+% Простой макрос для примечания, слово "П р и м е ч а н и е" разреженное.
+\newcommand{\NoteLabel}{\textls[200]{П р и м е ч а н и е}}
+\newenvironment{rosanote}
+  {\par\noindent\textbf{\NoteLabel{} —}\ }
+  {\par}
+
+% ========= Кнопки / клавиши =========
+\newcommand{\key}[1]{\texttt{\fontsize{$buttonsize$}{$buttonbaselineskip$}\selectfont #1}}
+
+% ========= Титульный лист =========
+\newcommand{\makemytitle}{
+  \begin{titlepage}
+    \centering
+    \vspace*{$logotopskip$}
+    $if(logo)$
+      \includegraphics[width=$logowidth$]{${logo}$}\par
+      \vspace{20mm}
+    $endif$
+    {\fontsize{$productfontsize$}{$productbaselineskip$}\selectfont\bfseries $title$ \par}
+    \vspace{15mm}
+    {\fontsize{$doctypefontsize$}{$doctypebaselineskip$}\selectfont $doctype$ \par}
+    \vfill
+    {\fontsize{$yearfontsize$}{$yearbaselineskip$}\selectfont $date$ \par}
+  \end{titlepage}
+}
+
+% ========= Оглавление =========
+\renewcommand{\contentsname}{СОДЕРЖАНИЕ}
+\setlength{\cftbeforetoctitleskip}{30pt}
+\setlength{\cftaftertoctitleskip}{18pt}
+\setlength{\cftparskip}{0pt}
+\setlength{\cftbeforesecskip}{0pt}
+
+% ========= Начало документа =========
+\begin{document}
+
+$if(titlepage)$
+  \makemytitle
+$endif$
+
+$if(toc)$
+{
+  \pagestyle{plain}
+  \tableofcontents
+  \clearpage
+}
+$endif$
+
+$body$
+
+\end{document}
+

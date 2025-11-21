@@ -1,0 +1,182 @@
+# style.yml — стиль "ROSA ГОСТ"
+
+document:
+  class: article
+  lang: ru
+  titlepage: true
+
+page:
+  size: a4paper
+  # точные поля в шаблоне не указаны, берём типичные для ГОСТ
+  margins:
+    left: 30mm
+    right: 15mm
+    top: 20mm
+    bottom: 20mm
+
+fonts:
+  main: "Roboto"
+  mono: "Roboto Mono"
+  # основной кегль текста в шаблоне явно не указан; из примеров
+  # (примечание 11 pt, заголовки 14–16 pt) берём 11 pt как базовый.
+  base_size: 11pt
+  line_height: 1.15   # множитель межстрочного интервала
+  note_size: 11pt
+  h1_size: 16pt
+  h2_size: 14pt
+  h3_size: 14pt
+  h4_size: 14pt
+  h5_size: 11pt
+  h6_size: 11pt
+  button_size: 12pt
+
+paragraph:
+  indent_first_line: 1.25cm
+  align: justify
+  spacing:
+    before: 0pt
+    after: 6pt
+  widow_orphan_protection: true
+
+headers:
+  h1:
+    # ОБЩИЕ СВЕДЕНИЯ — все прописные, по центру, с новой страницы :contentReference[oaicite:1]{index=1}
+    font_size: 16pt
+    bold: true
+    caps: true
+    align: center
+    page_break_before: true
+    spacing:
+      before: 30pt
+      after: 18pt
+  h2:
+    font_size: 14pt
+    bold: false
+    caps: false
+    align: justify
+    first_line_indent: 1.25cm
+    spacing:
+      before: 24pt
+      after: 12pt
+  h3:
+    font_size: 14pt
+    bold: true
+    align: justify
+    first_line_indent: 1.25cm
+    spacing:
+      before: 18pt
+      after: 12pt
+  h4:
+    font_size: 14pt
+    bold: true
+    align: justify
+    first_line_indent: 1.25cm
+    spacing:
+      before: 18pt
+      after: 12pt
+  h5:
+    font_size: 11pt
+    bold: true
+    align: justify
+    first_line_indent: 1cm
+    spacing:
+      before: 6pt
+      after: 6pt
+  h6:
+    font_size: 11pt
+    bold: true
+    align: justify
+    first_line_indent: 1cm
+    spacing:
+      before: 6pt
+      after: 6pt
+
+toc:
+  # заголовок "СОДЕРЖАНИЕ" оформляется как h1 в примере :contentReference[oaicite:2]{index=2}
+  title: "СОДЕРЖАНИЕ"
+  title_style: h1
+  dotfill: true
+
+terms:
+  # раздел "ПЕРЕЧЕНЬ СОКРАЩЕНИЙ" — аналог h1, но без разрыва страницы перед списком
+  title: "ПЕРЕЧЕНЬ СОКРАЩЕНИЙ"
+  title_style: h1
+
+annotation:
+  title: "АННОТАЦИЯ"
+  title_style: h1
+  header:
+    font_size: 12pt
+    align: center
+
+titlepage:
+  logo_width: 4.2cm   # из подписи логотипа 1,20 см х 4,20 см :contentReference[oaicite:3]{index=3}
+  logo_top_skip: 20mm
+  org_font_size: 14pt
+  product_font_size: 16pt
+  product_bold: true
+  doc_type_font_size: 14pt
+  index_font_size: 12pt
+  year_font_size: 14pt
+
+lists:
+  ordered:
+    # нумерованные списки а), б), в)… :contentReference[oaicite:4]{index=4}
+    label_style: "russian-alpha-parenthesis"  # будет реализовано в TeX
+    indent: 1.25cm
+    align: justify
+    spacing_after: 6pt
+  nested:
+    # вложенные списки с маркерами "—", отступ 1,85 см :contentReference[oaicite:5]{index=5}
+    marker: "dash"
+    left_indent: 1.85cm
+    align: justify
+    spacing_after: 6pt
+  no_extra_space_same_style: true
+
+figures:
+  # блок ::sign-image … Рисунок 1 – … :contentReference[oaicite:6]{index=6}
+  caption_format: "Рисунок %d – %s"
+  caption_align: center
+  spacing:
+    before: 18pt
+    after: 18pt
+
+tables:
+  # ::app-collapsible с подписью "Таблица 1 – …" :contentReference[oaicite:7]{index=7}
+  caption_format: "Таблица %d – %s"
+  caption_align: left
+  header_bold: true
+  header_align: center
+  spacing:
+    before_caption: 6pt
+    after_caption: 6pt
+    after_table: 12pt
+  cell:
+    first_line_indent: 1.25cm
+    align: justify
+    spacing_after: 6pt
+
+notes:
+  # Примечание — слово разрежено, 11 pt :contentReference[oaicite:8]{index=8}
+  label: "П р и м е ч а н и е"
+  font_size: 11pt
+  label_letterspacing: 2pt
+  align: justify
+
+codeblock:
+  font: "Roboto Mono"
+  font_size: 11pt
+  align: left
+  spacing_after: 6pt
+  left_indent: 1.25cm
+
+button:
+  # оформление клавиш / кнопок — Roboto Mono 12 pt :contentReference[oaicite:9]{index=9}
+  font: "Roboto Mono"
+  font_size: 12pt
+
+inline_code:
+  font: "Roboto Mono"
+  font_size: 11pt
+
