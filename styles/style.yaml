@@ -23,11 +23,17 @@ fonts:
   line_height: 1.15   # множитель межстрочного интервала
   note_size: 11pt
   h1_size: 16pt
+  h1_baseline: 19pt
   h2_size: 14pt
+  h2_baseline: 17pt
   h3_size: 14pt
+  h3_baseline: 17pt
   h4_size: 14pt
+  h4_baseline: 17pt
   h5_size: 11pt
+  h5_baseline: 13pt
   h6_size: 11pt
+  h6_baseline: 13pt
   button_size: 12pt
 
 paragraph:
@@ -167,6 +173,7 @@ notes:
 codeblock:
   font: "Roboto Mono"
   font_size: 11pt
+  baseline: 13pt
   align: left
   spacing_after: 6pt
   left_indent: 1.25cm
@@ -175,8 +182,8 @@ button:
   # оформление клавиш / кнопок — Roboto Mono 12 pt :contentReference[oaicite:9]{index=9}
   font: "Roboto Mono"
   font_size: 12pt
+  baseline: 14pt
 
 inline_code:
   font: "Roboto Mono"
   font_size: 11pt
-

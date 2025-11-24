@@ -1,27 +1,35 @@
 % gost.tex — шаблон ROSA ГОСТ для Pandoc
 
-\documentclass[$fontsize$]{$documentclass$}
+\documentclass[$fonts.base_size$]{$document.class$}
 
 % ========= Базовые пакеты =========
 \usepackage{ifxetex,ifluatex}
 \usepackage{ifthen}
 \usepackage{calc}
 \usepackage{polyglossia}
-\setmainlanguage{russian}
-\setotherlanguage{english}
+$if(document.lang)$
+  \setmainlanguage{$document.lang$}
+$else$
+  \setmainlanguage{russian}
+$endif$
+  \setotherlanguage{english}
 
 \usepackage{fontspec}
-\setmainfont{$mainfont$}
-\setsansfont{$mainfont$}
-\setmonofont{$monofont$}
+\setmainfont{$fonts.main$}
+\setsansfont{$fonts.main$}
+\setmonofont{$fonts.mono$}
 
 \usepackage{geometry}
 \geometry{
-  $geometry$
+  paper=$page.size$,
+  left=$page.margins.left$,
+  right=$page.margins.right$,
+  top=$page.margins.top$,
+  bottom=$page.margins.bottom$
 }
 
 \usepackage{setspace}
-\setstretch{$lineheight$}
+\setstretch{$fonts.line_height$}
 
 \usepackage{microtype}
 \usepackage{titlesec}
@@ -45,31 +53,31 @@
 \usepackage{listings}
 
 % ========= Параграфы =========
-\setlength{\parindent}{$parindent$}
-\setlength{\parskip}{0pt}
+\setlength{\parindent}{$paragraph.indent_first_line$}
+\setlength{\parskip}{$paragraph.spacing.after$}
 
 % ========= Колонтитулы =========
 \pagestyle{fancy}
 \fancyhf{}
-\fancyhead[C]{$headercenter$}
+\fancyhead[C]{$if(header.center)$$header.center$$endif$}
 \fancyfoot[C]{\thepage}
 
 % ========= Заголовки =========
 % H1 — все прописные, по центру, с новой страницы
 \titleformat{\section}
-  {\bfseries\fontsize{$h1size$}{$h1baselineskip$}\selectfont}
-  {\thesection}{1em}{\centering\MakeUppercase}
+  {\bfseries\fontsize{$fonts.h1_size$}{$fonts.h1_baseline$}\selectfont}
+  {\thesection}{1em}{\clearpage\centering\MakeUppercase}
 \titlespacing*{\section}{0pt}{30pt}{18pt}
 
 % H2
 \titleformat{\subsection}
-  {\normalfont\fontsize{$h2size$}{$h2baselineskip$}\selectfont}
+  {\normalfont\fontsize{$fonts.h2_size$}{$fonts.h2_baseline$}\selectfont}
   {\thesubsection}{1em}{}
 \titlespacing*{\subsection}{0pt}{24pt}{12pt}
 
 % H3
 \titleformat{\subsubsection}
-  {\bfseries\fontsize{$h3size$}{$h3baselineskip$}\selectfont}
+  {\bfseries\fontsize{$fonts.h3_size$}{$fonts.h3_baseline$}\selectfont}
   {\thesubsubsection}{1em}{}
 \titlespacing*{\subsubsection}{0pt}{18pt}{12pt}
 
@@ -79,36 +87,38 @@
 % Нумерованный список с русскими буквами: а), б), в) …
 \AddEnumerateCounter{\asbuk}{\russian@alph}{щ}
 \setlist[enumerate,1]{
-  label=\asbuk*) ,
-  leftmargin=1.25cm,
+  label=\asbuk*),
+  leftmargin=$lists.ordered.indent$,
   itemindent=0pt,
   labelsep=0.5em,
   topsep=0pt,
   parsep=0pt,
-  itemsep=6pt
+  itemsep=$lists.ordered.spacing_after$
 }
 
 % Вложенные списки с маркером "—", отступ 1.85 см
 \setlist[itemize,1]{
   label=---,
-  leftmargin=1.85cm,
+  leftmargin=$lists.nested.left_indent$,
   itemindent=0pt,
   topsep=0pt,
   parsep=0pt,
-  itemsep=6pt
+  itemsep=$lists.nested.spacing_after$
 }
 
 % ========= Таблицы и подписи =========
 \captionsetup[table]{
   font=normalsize,
-  justification=justified,
+  justification=raggedright,
   singlelinecheck=false,
-  skip=12pt
+  aboveskip=$tables.spacing.before_caption$,
+  belowskip=$tables.spacing.after_caption$
 }
 \captionsetup[figure]{
   font=normalsize,
   justification=centering,
-  skip=18pt
+  aboveskip=$figures.spacing.before$,
+  belowskip=$figures.spacing.after$
 }
 
 % Формат подписей "Таблица N – ..." и "Рисунок N – ..."
@@ -122,16 +132,16 @@
 
 % ========= Области кода =========
 \lstset{
-  basicstyle=\ttfamily\fontsize{$codefontsize$}{$codebaselineskip$}\selectfont,
+  basicstyle=\ttfamily\fontsize{$codeblock.font_size$}{$codeblock.baseline$}\selectfont,
   columns=fullflexible,
   keepspaces=true,
   showstringspaces=false,
   breaklines=true,
   frame=single,
-  xleftmargin=1.25cm,
+  xleftmargin=$codeblock.left_indent$,
   framexleftmargin=1em,
-  aboveskip=6pt,
-  belowskip=6pt
+  aboveskip=$codeblock.spacing_after$,
+  belowskip=$codeblock.spacing_after$
 }
 
 % Pandoc будет использовать lstlisting для блоков кода
@@ -140,33 +150,41 @@ $endif$
 
 % ========= Примечания =========
 % Простой макрос для примечания, слово "П р и м е ч а н и е" разреженное.
-\newcommand{\NoteLabel}{\textls[200]{П р и м е ч а н и е}}
+\newcommand{\NoteLabel}{\textls[$notes.label_letterspacing$]{$notes.label$}}
 \newenvironment{rosanote}
   {\par\noindent\textbf{\NoteLabel{} —}\ }
   {\par}
 
 % ========= Кнопки / клавиши =========
-\newcommand{\key}[1]{\texttt{\fontsize{$buttonsize$}{$buttonbaselineskip$}\selectfont #1}}
+\newcommand{\key}[1]{\texttt{\fontsize{$button.font_size$}{$button.baseline$}\selectfont #1}}
 
 % ========= Титульный лист =========
 \newcommand{\makemytitle}{
   \begin{titlepage}
     \centering
-    \vspace*{$logotopskip$}
+    \vspace*{$titlepage.logo_top_skip$}
     $if(logo)$
-      \includegraphics[width=$logowidth$]{${logo}$}\par
+      \includegraphics[width=$titlepage.logo_width$]{${logo}$}\par
       \vspace{20mm}
     $endif$
-    {\fontsize{$productfontsize$}{$productbaselineskip$}\selectfont\bfseries $title$ \par}
+    $if(titlepage.org)$
+      {\fontsize{$titlepage.org_font_size$}{$titlepage.org_font_size$}\selectfont $titlepage.org$ \par}
+      \vspace{10mm}
+    $endif$
+    {\fontsize{$titlepage.product_font_size$}{$titlepage.product_font_size$}\selectfont$if(titlepage.product_bold)$\bfseries$endif$ $title$ \par}
     \vspace{15mm}
-    {\fontsize{$doctypefontsize$}{$doctypebaselineskip$}\selectfont $doctype$ \par}
+    {\fontsize{$titlepage.doc_type_font_size$}{$titlepage.doc_type_font_size$}\selectfont $doctype$ \par}
+    $if(titlepage.index)$
+      \vspace{10mm}
+      {\fontsize{$titlepage.index_font_size$}{$titlepage.index_font_size$}\selectfont $titlepage.index$ \par}
+    $endif$
     \vfill
-    {\fontsize{$yearfontsize$}{$yearbaselineskip$}\selectfont $date$ \par}
+    {\fontsize{$titlepage.year_font_size$}{$titlepage.year_font_size$}\selectfont $date$ \par}
   \end{titlepage}
 }
 
 % ========= Оглавление =========
-\renewcommand{\contentsname}{СОДЕРЖАНИЕ}
+\renewcommand{\contentsname}{$if(toc.title)$$toc.title$$else$СОДЕРЖАНИЕ$endif$}
 \setlength{\cftbeforetoctitleskip}{30pt}
 \setlength{\cftaftertoctitleskip}{18pt}
 \setlength{\cftparskip}{0pt}
@@ -175,7 +193,7 @@ $endif$
 % ========= Начало документа =========
 \begin{document}
 
-$if(titlepage)$
+$if(document.titlepage)$
   \makemytitle
 $endif$
 
@@ -190,4 +208,3 @@ $endif$
 $body$
 
 \end{document}
-
