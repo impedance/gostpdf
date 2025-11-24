@@ -1,5 +1,7 @@
 # Repository Guidelines
 
+Перед началом работы обязательно прочитайте `architecture.md` и `hierarchy-analysis.md`.
+
 ## Project Structure & Module Organization
 - `prd.md` — цель продукта: CLI принимает дерево Markdown, вычисляет папку с картинками, собирает `bundle.md`, рендерит PDF через Pandoc + LaTeX.
 - `hierarchy-analysis.md` — порядок обхода `content/<NNN.slug>/0.index.md` и правило маппинга в `/public/images/<doc-slug>/...`; используйте как единственный источник правды.
@@ -17,20 +19,30 @@ public/images/cu/section/chapter/image1.png
 
 ## Getting Started (для джуна)
 1) Установите Python 3.11+, Pandoc 3.x, LaTeX (xelatex).  
-2) Локальный инструментарий: `pip install ruff pytest` (типизацию можно позже).  
-3) Перед правками прогоните быстрый цикл: `ruff check . && ruff format . && pytest`.  
-4) Рендер PDF выполняйте только при необходимости, чтобы экономить время.
+2) Создайте виртуальное окружение (`python -m venv .venv && source .venv/bin/activate` или аналог) и фиксируйте зависимости в lock-файле (`requirements.txt`, `uv.lock`, `poetry.lock`) после установки.  
+3) Локальный инструментарий: `pip install ruff pytest` (типизацию можно позже).  
+4) Перед правками прогоните быстрый цикл: `ruff check . && ruff format . && pytest`.  
+5) Рендер PDF выполняйте только при необходимости, чтобы экономить время.
 
 ## Build, Test, and Development Commands
 - Рендер готового бандла:  
   `pandoc bundle.md --from markdown+yaml_metadata_block --template=templates/gost.tex --pdf-engine=xelatex --toc -o output/report.pdf`
 - Планируемый CLI по PRD:  
   `md2pdf --md-dir ./content/003.cu --config ./config/project.yml --style gost ./output/report.pdf`
+- `config/project.yml` пример минимальной структуры:  
+  ```yaml
+  content_root: content
+  images_root: public/images
+  style: gost
+  template: templates/gost.tex
+  ```
 - Быстрый цикл: `ruff check .`, `ruff format .`, `pytest`.
+- Smoke-проверка окружения перед рендером: `pandoc --version` и `xelatex --version`.
 
 ## Coding Style & Naming Conventions
 - PEP 8, отступы 4 пробела; snake_case для функций/переменных, CapWords для классов; явные параметры, без глобалов.
 - CLI флаги как в PRD (`--md-dir`, `--config`, `--style`); имена стилей равны файлам в `styles/`.
+- Маппинг стилей: `--style gost` ищет `styles/gost.yaml` (без суффикса в имени флага), для кастомных стилей придерживайтесь того же правила именования.
 - YAML — 2 пробела, шрифты в кавычках при пробелах; в `gost.tex` не менять формат переменных `$var$`.
 - Линт/формат: `ruff check` и `ruff format` без кастомных настроек на старте.
 
@@ -40,8 +52,8 @@ public/images/cu/section/chapter/image1.png
 
 ## Testing Guidelines (фокус 20/80)
 - `pytest` с `test_*.py`; фикстуры в `tests/fixtures`.
-- Порядок обхода: маленькое дерево `content/` с `0.index.md`, проверяем итоговую последовательность.
-- Резолв картинок: путь `content/003.cu/02.section/020100.file.md` ⇒ `/images/cu/section/file/image1.png`.
+- Порядок обхода: используйте `hierarchy-analysis.md` как источник правды; `0.index.md` (или `index.md`) всегда первый в директории, затем дочерние md/папки в числовом порядке имени (с паддингами) и рекурсивно. При отсутствии индекса — предупреждение, содержимое по числовому порядку, потом безпрефиксные файлы по алфавиту.
+- Резолв картинок: путь `content/003.cu/02.section/020100.file.md` ⇒ `/images/cu/section/file/image1.png` (числовые префиксы удаляются, ветки `cert/nocert` и т.п. учитываются, если есть в контенте).
 - Сборка `bundle.md`: интеграционный тест на порядок, разделители, ссылки.
 - CLI-smoke с подменой Pandoc/subprocess и тест читаемой ошибки при битой ссылке/файле.
 - Пример теста резолва (упрощённый):
