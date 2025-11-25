@@ -64,3 +64,38 @@ def test_render_raises_on_failure(monkeypatch: pytest.MonkeyPatch) -> None:
 
     assert "pandoc error" in str(excinfo.value)
     assert "pandoc bundle.md" in str(excinfo.value)
+
+
+def test_render_sets_texmfvar(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    captured_env: dict[str, str] = {}
+
+    def fake_run(*args, **kwargs):  # type: ignore[no-untyped-def]
+        nonlocal captured_env
+        captured_env = kwargs.get("env", {})
+        return _StubResult()
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(subprocess, "run", fake_run)
+
+    render(Path("bundle.md"), Path("style.yaml"), Path("template.tex"), Path("out.pdf"))
+
+    assert captured_env.get("TEXMFVAR") == str(tmp_path / ".texmf-var")
+    assert (tmp_path / ".texmf-var").is_dir()
+
+
+def test_render_respects_existing_texmfvar(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    captured_env: dict[str, str] = {}
+
+    def fake_run(*args, **kwargs):  # type: ignore[no-untyped-def]
+        nonlocal captured_env
+        captured_env = kwargs.get("env", {})
+        return _StubResult()
+
+    monkeypatch.setenv("TEXMFVAR", str(tmp_path / "cache"))
+    monkeypatch.setattr(subprocess, "run", fake_run)
+
+    render(Path("bundle.md"), Path("style.yaml"), Path("template.tex"), Path("out.pdf"))
+
+    assert captured_env.get("TEXMFVAR") == str(tmp_path / "cache")

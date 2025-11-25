@@ -5,10 +5,37 @@ from __future__ import annotations
 import argparse
 import sys
 from pathlib import Path
-from typing import Mapping, Sequence
+from typing import IO, Mapping, Sequence
 
 from . import pipeline
 from .reporting import write_warnings
+
+
+class ProgressReporter:
+    """Управляет выводом прогресса и дублирует его в лог."""
+
+    def __init__(self, verbose: bool, log_file: Path | None) -> None:
+        self.verbose = verbose
+        self.log_file = log_file
+        self._log_handle: IO[str] | None = None
+
+    def __enter__(self) -> "ProgressReporter":
+        if self.log_file is not None:
+            self.log_file.parent.mkdir(parents=True, exist_ok=True)
+            self._log_handle = open(self.log_file, "a", encoding="utf-8")
+        return self
+
+    def __exit__(self, *_: object) -> None:
+        if self._log_handle is not None:
+            self._log_handle.close()
+
+    def stage(self, message: str) -> None:
+        line = f"[md2pdf] {message}"
+        if self.verbose:
+            print(line, file=sys.stderr, flush=True)
+        if self._log_handle is not None:
+            self._log_handle.write(line + "\n")
+            self._log_handle.flush()
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -16,16 +43,22 @@ def _build_parser() -> argparse.ArgumentParser:
         description="Render Markdown content into a PDF using project configuration.",
     )
     parser.add_argument(
-        "--md-dir",
-        required=True,
-        type=Path,
-        help="Path to the markdown directory to render.",
-    )
-    parser.add_argument(
         "--config",
         type=Path,
         default=Path("config/project.yml"),
         help="Path to the project configuration file (default: config/project.yml).",
+    )
+    parser.add_argument(
+        "--md-dir",
+        dest="md_dir_flag",
+        type=Path,
+        help="Explicit markdown directory (fallback when positional arg is absent).",
+    )
+    parser.add_argument(
+        "md_dir",
+        nargs="?",
+        type=Path,
+        help="Markdown directory to render (preferred over --md-dir).",
     )
     parser.add_argument(
         "--style",
@@ -38,6 +71,16 @@ def _build_parser() -> argparse.ArgumentParser:
         default=[],
         metavar="KEY=VALUE",
         help="Override bundle metadata; can be provided multiple times.",
+    )
+    parser.add_argument(
+        "--log-file",
+        type=Path,
+        help="Write verbose output and Pandoc logs into a file.",
+    )
+    parser.add_argument(
+        "--quiet",
+        action="store_true",
+        help="Suppress progress output (Pandoc still emits errors).",
     )
     parser.add_argument(
         "output",
@@ -67,33 +110,53 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     try:
+        md_dir = args.md_dir or args.md_dir_flag
+        if md_dir is None:
+            raise ValueError("Provide markdown directory as first argument or --md-dir")
+
+        if args.log_file:
+            args.log_file.unlink(missing_ok=True)
+
         metadata_overrides = _parse_metadata(args.metadata)
         params = pipeline.prepare_params(
-            md_dir=args.md_dir,
+            md_dir=md_dir,
             config_path=args.config,
             style_override=args.style,
             output_override=args.output,
             metadata_overrides=metadata_overrides,
         )
 
-        collection = pipeline.collect_markdown(params.md_root)
-        bundle = pipeline.assemble_bundle(
-            collection.order,
-            params.bundle_path,
-            metadata=params.metadata,
-        )
-        output_pdf = pipeline.render_pdf(
-            bundle.path,
-            style=params.style,
-            template=params.template,
-            output=params.output_pdf,
-            filters=params.filters,
-        )
-        result = pipeline.aggregate_result(
-            bundle.path,
-            output_pdf,
-            collection.warnings,
-        )
+        verbose = not args.quiet
+        with ProgressReporter(verbose=verbose, log_file=args.log_file) as progress:
+            progress.stage(f"Collecting markdown from {params.md_root}")
+            collection = pipeline.collect_markdown(params.md_root)
+
+            progress.stage(f"Building bundle -> {params.bundle_path}")
+            bundle = pipeline.assemble_bundle(
+                collection.order,
+                params.bundle_path,
+                metadata=params.metadata,
+            )
+
+            progress.stage(
+                f"Rendering PDF to {params.output_pdf} (style: {params.style.name})"
+            )
+            output_pdf = pipeline.render_pdf(
+                bundle.path,
+                style=params.style,
+                template=params.template,
+                output=params.output_pdf,
+                filters=params.filters,
+                verbose=verbose,
+                log_file=args.log_file,
+            )
+            progress.stage("Done")
+
+            result = pipeline.aggregate_result(
+                bundle.path,
+                output_pdf,
+                collection.warnings,
+            )
     except ValueError as exc:  # noqa: PERF203
         print(exc, file=sys.stderr)
         return 1

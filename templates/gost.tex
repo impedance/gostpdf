@@ -15,9 +15,11 @@ $endif$
   \setotherlanguage{english}
 
 \usepackage{fontspec}
-\setmainfont{$fonts.main$}
-\setsansfont{$fonts.main$}
-\setmonofont{$fonts.mono$}
+\newcommand{\fallbackmain}{Latin Modern Roman}
+\newcommand{\fallbackmono}{Latin Modern Mono}
+\IfFontExistsTF{$fonts.main$}{\setmainfont{$fonts.main$}}{\setmainfont{\fallbackmain}}
+\IfFontExistsTF{$fonts.main$}{\setsansfont{$fonts.main$}}{\setsansfont{\fallbackmain}}
+\IfFontExistsTF{$fonts.mono$}{\setmonofont{$fonts.mono$}}{\setmonofont{\fallbackmono}}
 
 \usepackage{geometry}
 \geometry{
@@ -54,6 +56,45 @@ $endif$
 \usepackage{booktabs}
 \usepackage{enumitem}
 \usepackage{listings}
+\usepackage{color}
+\usepackage{fancyvrb}
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{241,243,245}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{\textcolor[rgb]{0.00,0.35,0.75}{#1}}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.71,0.36,0.95}{#1}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.44,0.44,0.00}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{1.00,0.00,0.00}{#1}}
+\newcommand{\ExtensionTok}[1]{\textcolor[rgb]{0.00,0.20,0.33}{#1}}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ImportTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{#1}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{#1}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\RegionMarkerTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.71,0.36,0.95}{#1}}
 
 % ========= Параграфы =========
 \setlength{\parindent}{$paragraph.indent_first_line$}
@@ -108,6 +149,10 @@ $endif$
   parsep=0pt,
   itemsep=$lists.nested.spacing_after$
 }
+
+% ========= Списки Pandoc =========
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
 
 % ========= Таблицы и подписи =========
 \captionsetup[table]{
@@ -176,7 +221,7 @@ $endif$
     \centering
     \vspace*{$titlepage.logo_top_skip$}
     $if(logo)$
-      \includegraphics[width=$titlepage.logo_width$]{${logo}$}\par
+      \includegraphics[width=$titlepage.logo_width$]{$logo$}\par
       \vspace{20mm}
     $endif$
     $if(titlepage.org)$

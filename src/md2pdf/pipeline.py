@@ -120,6 +120,8 @@ def render_pdf(
     template: Path,
     output: Path,
     filters: Sequence[Path] = (),
+    verbose: bool = False,
+    log_file: Path | None = None,
 ) -> Path:
     """Подготовить и вызвать рендер PDF через Pandoc."""
 
@@ -129,7 +131,15 @@ def render_pdf(
         raise ValueError(f"Expected file, got directory: {bundle}")
 
     output.parent.mkdir(parents=True, exist_ok=True)
-    _render(bundle, style, template, output, filters)
+    _render(
+        bundle,
+        style,
+        template,
+        output,
+        filters,
+        verbose=verbose,
+        log_file=log_file,
+    )
     return output
 
 
