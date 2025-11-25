@@ -1,0 +1,11 @@
+content_root: content
+images_root: public/images
+style: style
+template: templates/gost.tex
+filters:
+  - filters/cleanup.lua
+metadata:
+  title: "Интеграционный тест"
+  doctype: "Черновик"
+  date: "2024-05-01"
+output: output/report.pdf
