@@ -1,7 +1,9 @@
 from __future__ import annotations
 
-from pathlib import Path
 import shutil
+from pathlib import Path
+
+import pytest
 
 from md2pdf import pipeline
 from md2pdf.pipeline import (
@@ -13,7 +15,9 @@ from md2pdf.pipeline import (
 )
 
 
-def test_pipeline_runs_end_to_end(monkeypatch, tmp_path):
+def test_pipeline_runs_end_to_end(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     fixture_root = Path(__file__).parent / "fixtures" / "pipeline"
     project_root = tmp_path / "project"
     shutil.copytree(fixture_root, project_root)
