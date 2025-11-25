@@ -14,21 +14,14 @@ Summary of the Markdown hierarchy in `content/*` (for bundling)
   - `009.rosa-resource-manager` (88 md, корневой `0.index.md`).  
   - `010.term-opred` (1 md, без `0.index.md`).
 
-- Общий алгоритм обхода (источник правды):
-  1. Точка входа — `content/<NNN.slug>/0.index.md` если он есть; если нет, начинаем с содержимого корня по числовому порядку, а файл `index.md` без префикса трактуем как эквивалент `0.index.md` на своём уровне.
-  2. В каждой директории сначала `0.index.md` (или `index.md`), затем остальные `.md` по числовому префиксу имени; файлы без префикса идут после префиксных, в алфавитном порядке.
-  3. Для поддиректорий — тот же порядок: каталоги по числовому имени, внутри них их `0.index.md` первыми, затем рекурсивно.
-  4. Неформатные вспомогательные файлы (`.navigation.yml` и т.п.) игнорируются.
-  5. Специально для `003.cu`: каталог `doc/` можно пропускать (там нет markdown), в остальных наборах таких директорий нет.
+Правила обхода и сортировки описаны в `architecture.md` (раздел «Инварианты структуры контента»); этот файл держим как срез текущего содержимого и исключений.
 
-Image placement and mapping (for bundling)
-------------------------------------------
+Index vs `.navigation.yml`
+--------------------------
 
-- Image root: `public/images/<doc-slug>/...`, где `<doc-slug>` — имя папки `content/<NNN.slug>` без числового префикса (`003.cu` → `cu`, `002.rosa-hrom` → `rosa-hrom`, `004.dynamic-directory` → `dynamic-directory`, `001.dev-portal-user` → `dev-portal-user`, и т.д.). Если каталога нет (например, `term-opred`), картинок для набора нет.
-- Папка картинок зеркалирует путь markdown с отброшенными числовыми префиксами и точками. Пример: `content/003.cu/02.ekspluatatsiya/060000.ctrl-uzlam/060500.dobav-uzla-v-grupp.md` → `/images/cu/ekspluatatsiya/ctrl-uzlam/dobav-uzla-v-grupp/imageNN.png`.
-- Файлы — простые счётчики (`image1.png`, `image2.jpeg`, ...); ссылки в Markdown уже могут быть абсолютными `/images/...` или короткими.
-- Два режима ссылок:
-  1) `::sign-image` с `src: /imageNN.png` — нужно разворачивать в папку картинок, вычисленную по пути markdown (см. выше).
-  2) `<img src="/images/<...>/imageNN.png" ... data-resource-id="imageNN"/>` — уже абсолютные, `data-resource-id` совпадает с именем файла.
-- Варианты веток: `public/images/rosa-hrom/{cert,nocert}/...` соответствуют одноимённым каталогам в контенте; остальная логика маппинга та же.
-- Для переписывания/валидации: берём slug документа, удаляем числовые префиксы и расширения у каждого сегмента пути к markdown, конкатенируем под `/images/<doc-slug>/...` и добавляем имя файла картинки.
+- `0.index.md` кладут там, где раздел содержит вводный текст (сейчас 169 таких файлов, большинство непустые).
+- Если у раздела только заголовок без тела, вместо `0.index.md` используют `.navigation.yml` с полем `title` (195 каталогов с навигацией и без индекса).
+- Корневые наборы держат пустые `0.index.md` вместе с `.navigation.yml` (cu, rosa-hrom, dynamic-directory, rosa-virt, rosa-barii, rosa-kubis, rosa-migration, rosa-resource-manager).
+- Почти все каталоги с markdown содержимым имеют либо индекс, либо `.navigation.yml`; исключения только `content/000.dev/001.components` и `content/003.cu/01.ustanovka/000000.service`.
+
+Image placement and mapping — см. `architecture.md` (раздел «Инварианты структуры контента»).
