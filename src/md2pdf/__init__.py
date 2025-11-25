@@ -1,6 +1,6 @@
 """md2pdf package."""
 
-from .bundle import DEFAULT_BUNDLE_METADATA, build
+from .bundle import DEFAULT_BUNDLE_METADATA, build, write_bundle
 from .config import ProjectConfig, load_config
 from .images import resolve_image_path, rewrite_images, strip_numeric
 from .reporting import StructureWarning
@@ -11,6 +11,7 @@ __all__ = [
     "ProjectConfig",
     "StructureWarning",
     "build",
+    "write_bundle",
     "load_config",
     "resolve_image_path",
     "rewrite_images",

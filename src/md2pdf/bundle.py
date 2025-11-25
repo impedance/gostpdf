@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
-import re
 from typing import Any
+
+from .images import rewrite_images
 
 DEFAULT_BUNDLE_METADATA: Mapping[str, str] = {
     "title": "Документ",
@@ -12,18 +13,27 @@ DEFAULT_BUNDLE_METADATA: Mapping[str, str] = {
 }
 
 
-def build(order: Sequence[Path], image_resolver: Callable[[Path, str], Path]) -> str:
+def build(
+    order: Sequence[Path],
+    image_resolver: Callable[[Path, str], Path],
+    metadata: Mapping[str, Any] | None = None,
+) -> str:
     """Собрать итоговый markdown-бандл.
 
     Args:
         order: Упорядоченный список markdown-файлов.
         image_resolver: Колбэк резолва пути картинки относительно markdown.
+        metadata: Дополнительные значения для фронтматтера бандла.
 
     Returns:
         Текст бандла с фронтматтером и проставленными заголовками.
     """
 
-    bundle_parts: list[str] = [_render_front_matter(DEFAULT_BUNDLE_METADATA)]
+    merged_metadata: dict[str, Any] = {**DEFAULT_BUNDLE_METADATA}
+    if metadata:
+        merged_metadata.update(metadata)
+
+    bundle_parts: list[str] = [_render_front_matter(merged_metadata)]
 
     if not order:
         return "\n".join(bundle_parts) + "\n"
@@ -33,7 +43,7 @@ def build(order: Sequence[Path], image_resolver: Callable[[Path, str], Path]) ->
     for md_path in order:
         raw = md_path.read_text(encoding="utf-8")
         metadata, body = _split_front_matter(raw)
-        rewritten_body = _rewrite_images(md_path, body, image_resolver)
+        rewritten_body = rewrite_images(md_path, body, resolver=image_resolver)
         heading_level = _heading_level(base_root, md_path)
         title = metadata.get("title", _derive_title(md_path))
         section = _render_section(title, rewritten_body, heading_level)
@@ -42,10 +52,18 @@ def build(order: Sequence[Path], image_resolver: Callable[[Path, str], Path]) ->
     return "\n\n".join(part for part in bundle_parts if part.strip()) + "\n"
 
 
+def write_bundle(text: str, path: Path | str) -> Path:
+    """Записать содержимое бандла в файл, создавая директории при необходимости."""
+
+    bundle_path = Path(path)
+    bundle_path.parent.mkdir(parents=True, exist_ok=True)
+    bundle_path.write_text(text, encoding="utf-8")
+    return bundle_path
+
+
 def _render_front_matter(metadata: Mapping[str, Any]) -> str:
     lines = ["---"]
-    for key in ("title", "doctype", "date"):
-        value = metadata.get(key, "")
+    for key, value in metadata.items():
         lines.append(f'{key}: "{value}"')
     lines.append("---")
     return "\n".join(lines)
@@ -103,40 +121,6 @@ def _derive_title(md_path: Path) -> str:
 
 def _strip_numeric(stem: str) -> str:
     return stem.split(".", 1)[-1] if "." in stem else stem
-
-
-_MARKDOWN_IMAGE = re.compile(r"!\[(?P<alt>[^\]]*)\]\((?P<src>[^\s)]+)\)")
-_HTML_IMAGE = re.compile(
-    r'<img[^>]*?src=["\'](?P<src>[^"\']+)["\'][^>]*?>', re.IGNORECASE
-)
-
-
-def _rewrite_images(
-    md_path: Path, text: str, image_resolver: Callable[[Path, str], Path]
-) -> str:
-    def replace_markdown(match: re.Match[str]) -> str:
-        src = match.group("src")
-        if _is_external(src):
-            return match.group(0)
-        resolved = image_resolver(md_path, src)
-        alt = match.group("alt")
-        return f"![{alt}]({resolved})"
-
-    def replace_html(match: re.Match[str]) -> str:
-        src = match.group("src")
-        if _is_external(src):
-            return match.group(0)
-        resolved = image_resolver(md_path, src)
-        return match.group(0).replace(src, str(resolved))
-
-    with_markdown = _MARKDOWN_IMAGE.sub(replace_markdown, text)
-    return _HTML_IMAGE.sub(replace_html, with_markdown)
-
-
-def _is_external(src: str) -> bool:
-    return (
-        src.startswith("/") or src.startswith("http://") or src.startswith("https://")
-    )
 
 
 def _render_section(title: str, body: str, level: int) -> str:

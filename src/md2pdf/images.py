@@ -46,7 +46,9 @@ def resolve_image_path(md_path: Path, image_name: str) -> Path:
     return Path("/images") / doc_slug / Path(*relative) / image
 
 
-def _rewrite_markdown_image(md_path: Path, match: re.Match[str]) -> str:
+def _rewrite_markdown_image(
+    md_path: Path, match: re.Match[str], resolver: Callable[[Path, str], Path]
+) -> str:
     alt = match.group("alt")
     target = match.group("path")
     title = match.group("title")
@@ -54,12 +56,14 @@ def _rewrite_markdown_image(md_path: Path, match: re.Match[str]) -> str:
     if target.startswith(("http://", "https://", "/images/")):
         return match.group(0)
 
-    resolved = resolve_image_path(md_path, target.lstrip("./"))
+    resolved = resolver(md_path, target.lstrip("./"))
     title_suffix = f' "{title}"' if title else ""
     return f"![{alt}]({resolved}{title_suffix})"
 
 
-def _rewrite_html_image(md_path: Path, match: re.Match[str]) -> str:
+def _rewrite_html_image(
+    md_path: Path, match: re.Match[str], resolver: Callable[[Path, str], Path]
+) -> str:
     prefix = match.group("prefix")
     src = match.group("src")
     suffix = match.group("suffix")
@@ -67,18 +71,31 @@ def _rewrite_html_image(md_path: Path, match: re.Match[str]) -> str:
     if src.startswith(("http://", "https://", "/images/")):
         return match.group(0)
 
-    resolved = resolve_image_path(md_path, src.lstrip("./"))
+    resolved = resolver(md_path, src.lstrip("./"))
     return f"{prefix}{resolved}{suffix}"
 
 
-def _rewrite_sign_image(md_path: Path, match: re.Match[str]) -> str:
+def _rewrite_sign_image(
+    md_path: Path, match: re.Match[str], resolver: Callable[[Path, str], Path]
+) -> str:
     src = match.group("src")
-    resolved = resolve_image_path(md_path, src.lstrip("/"))
+    resolved = resolver(md_path, src.lstrip("/"))
     return match.group(0).replace(src, str(resolved))
 
 
-def rewrite_images(md_path: Path, text: str) -> str:
-    """Rewrite image links in markdown text to absolute ``/images`` paths."""
+def rewrite_images(
+    md_path: Path,
+    text: str,
+    *,
+    resolver: Callable[[Path, str], Path] | None = None,
+) -> str:
+    """Rewrite image links in markdown text to absolute ``/images`` paths.
+
+    A custom ``resolver`` may be provided to alter how image targets are
+    rewritten, defaulting to :func:`resolve_image_path`.
+    """
+
+    image_resolver = resolver or resolve_image_path
 
     markdown_pattern = re.compile(
         r"!\[(?P<alt>[^\]]*)\]\((?P<path>[^)\s]+)(?:\s+\"(?P<title>[^\"]*)\")?\)",
@@ -90,9 +107,9 @@ def rewrite_images(md_path: Path, text: str) -> str:
     sign_pattern = re.compile(r"::sign-image\s+src:\s*(?P<src>\S+)")
 
     transformers: list[tuple[re.Pattern[str], Callable[[Path, re.Match[str]], str]]] = [
-        (sign_pattern, _rewrite_sign_image),
-        (markdown_pattern, _rewrite_markdown_image),
-        (html_pattern, _rewrite_html_image),
+        (sign_pattern, lambda md, m: _rewrite_sign_image(md, m, image_resolver)),
+        (markdown_pattern, lambda md, m: _rewrite_markdown_image(md, m, image_resolver)),
+        (html_pattern, lambda md, m: _rewrite_html_image(md, m, image_resolver)),
     ]
 
     updated = text
