@@ -6,7 +6,7 @@
 - `prd.md` — цель продукта: CLI принимает дерево Markdown, вычисляет папку с картинками, собирает `bundle.md`, рендерит PDF через Pandoc + LaTeX.
 - `hierarchy-analysis.md` — порядок обхода `content/<NNN.slug>/0.index.md` и правило маппинга в `/public/images/<doc-slug>/...`; используйте как единственный источник правды.
 - `styles/style.yaml` — токены оформления (файл сейчас называется `style.yaml`, не `gost.yaml`); `templates/gost.tex` — LaTeX-шаблон с переменными Pandoc.
-- Ожидаемые папки: `content/`, `public/images/`, промежуточный `bundle.md`, тесты в `tests/`. Каталог `tests/fixtures/` пока отсутствует — создайте при добавлении интеграционных тестов.
+- Ожидаемые папки: `content/`, `public/images/`, промежуточный `bundle.md`, тесты в `tests/` (базовые фикстуры уже есть в `tests/fixtures/`).
 - Минимальный пример дерева для тестов:
 ```
 content/003.cu/
@@ -21,7 +21,7 @@ public/images/cu/section/chapter/image1.png
 1) Установите Python 3.11+, Pandoc 3.x, LaTeX (xelatex).  
 2) Создайте виртуальное окружение (`python -m venv .venv && source .venv/bin/activate` или аналог) и фиксируйте зависимости в lock-файле (`requirements.txt`, `uv.lock`, `poetry.lock`) после установки. **Перед каждой работой активируйте .venv (например, `source .venv/bin/activate`) и убедитесь, что `which python`/`pytest` указывают на него.**  
    Всегда начинайте с `source .venv/bin/activate` и используйте `./.venv/bin/python`, `./.venv/bin/pytest` для команд.
-3) Локальный инструментарий: `pip install ruff pytest` (типизацию можно позже).  
+3) Локальный инструментарий: `pip install ruff pytest mypy types-PyYAML` (типизацию подключайте сразу).  
 4) Перед правками прогоните быстрый цикл: `ruff check . && ruff format . && mypy . && pytest`.
 5) Рендер PDF выполняйте только при необходимости, чтобы экономить время.
 
