@@ -30,6 +30,9 @@ $endif$
 
 \usepackage{setspace}
 \setstretch{$fonts.line_height$}
+\clubpenalty=10000
+\widowpenalty=10000
+\displaywidowpenalty=10000
 
 \usepackage{microtype}
 \usepackage{titlesec}
@@ -111,12 +114,17 @@ $endif$
   font=normalsize,
   justification=raggedright,
   singlelinecheck=false,
+  margin=$tables.caption_indent$,
+  indention=$tables.caption_indent$,
   aboveskip=$tables.spacing.before_caption$,
   belowskip=$tables.spacing.after_caption$
 }
 \captionsetup[figure]{
   font=normalsize,
-  justification=centering,
+  justification=raggedright,
+  singlelinecheck=false,
+  margin=$figures.caption_indent$,
+  indention=$figures.caption_indent$,
   aboveskip=$figures.spacing.before$,
   belowskip=$figures.spacing.after$
 }
@@ -137,9 +145,8 @@ $endif$
   keepspaces=true,
   showstringspaces=false,
   breaklines=true,
-  frame=single,
+  frame=$codeblock.frame$,
   xleftmargin=$codeblock.left_indent$,
-  framexleftmargin=1em,
   aboveskip=$codeblock.spacing_after$,
   belowskip=$codeblock.spacing_after$
 }
@@ -154,6 +161,11 @@ $endif$
 \newenvironment{rosanote}
   {\par\noindent\textbf{\NoteLabel{} —}\ }
   {\par}
+
+% ========= Табличный текст =========
+\renewcommand{\arraystretch}{$tables.cell.line_height$}
+\AtBeginEnvironment{tabular}{\setlength{\parindent}{$tables.cell.first_line_indent$}\setlength{\parskip}{$tables.cell.spacing_after$}}
+\AtBeginEnvironment{longtable}{\setlength{\parindent}{$tables.cell.first_line_indent$}\setlength{\parskip}{$tables.cell.spacing_after$}}
 
 % ========= Кнопки / клавиши =========
 \newcommand{\key}[1]{\texttt{\fontsize{$button.font_size$}{$button.baseline$}\selectfont #1}}

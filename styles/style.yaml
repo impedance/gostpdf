@@ -143,7 +143,8 @@ lists:
 figures:
   # блок ::sign-image … Рисунок 1 – … :contentReference[oaicite:6]{index=6}
   caption_format: "Рисунок %d – %s"
-  caption_align: center
+  caption_align: left
+  caption_indent: 0.63cm
   spacing:
     before: 18pt
     after: 18pt
@@ -152,6 +153,7 @@ tables:
   # ::app-collapsible с подписью "Таблица 1 – …" :contentReference[oaicite:7]{index=7}
   caption_format: "Таблица %d – %s"
   caption_align: left
+  caption_indent: 0cm
   header_bold: true
   header_align: center
   spacing:
@@ -162,6 +164,7 @@ tables:
     first_line_indent: 1.25cm
     align: justify
     spacing_after: 6pt
+    line_height: 1.15
 
 notes:
   # Примечание — слово разрежено, 11 pt :contentReference[oaicite:8]{index=8}
@@ -177,6 +180,7 @@ codeblock:
   align: left
   spacing_after: 6pt
   left_indent: 1.25cm
+  frame: none   # в шаблоне из PDF рамки нет
 
 button:
   # оформление клавиш / кнопок — Roboto Mono 12 pt :contentReference[oaicite:9]{index=9}
