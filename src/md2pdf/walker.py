@@ -90,7 +90,9 @@ def _partition_entries(directory: Path) -> Tuple[List[Path], List[Path], List[Pa
 
 
 def _select_index(files: Sequence[Path]) -> Path | None:
-    prioritized = sorted(INDEX_NAMES, key=lambda name: 0 if name.startswith("0.") else 1)
+    prioritized = sorted(
+        INDEX_NAMES, key=lambda name: 0 if name.startswith("0.") else 1
+    )
     by_name = {file.name: file for file in files}
     for name in prioritized:
         if name in by_name:
@@ -106,7 +108,7 @@ def _numeric_prefix(name: str) -> int | None:
 def _sort_md(files: Sequence[Path], index: Path | None) -> List[Path]:
     def sort_key(path: Path) -> tuple[int, str]:
         num = _numeric_prefix(path.name)
-        return (0, num) if num is not None else (1, path.name)
+        return (0, f"{num:09d}") if num is not None else (1, path.name)
 
     filtered = [file for file in files if file != index]
     return sorted(filtered, key=sort_key)
@@ -115,6 +117,6 @@ def _sort_md(files: Sequence[Path], index: Path | None) -> List[Path]:
 def _sort_dirs(dirs: Iterable[Path]) -> List[Path]:
     def sort_key(path: Path) -> tuple[int, str]:
         num = _numeric_prefix(path.name)
-        return (0, num) if num is not None else (1, path.name)
+        return (0, f"{num:09d}") if num is not None else (1, path.name)
 
     return sorted(dirs, key=sort_key)

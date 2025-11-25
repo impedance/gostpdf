@@ -1,7 +1,5 @@
 from pathlib import Path
 
-import pytest
-
 from md2pdf.walker import walk
 
 
@@ -60,7 +58,9 @@ def test_skips_non_md_with_warning(tmp_path: Path) -> None:
 
     _, warnings = walk(md_root)
 
-    assert any(w.code == "SKIPPED_NON_MD" and w.path.name == "notes.txt" for w in warnings)
+    assert any(
+        w.code == "SKIPPED_NON_MD" and w.path.name == "notes.txt" for w in warnings
+    )
 
 
 def test_warns_on_non_numeric_file(tmp_path: Path) -> None:
@@ -71,7 +71,9 @@ def test_warns_on_non_numeric_file(tmp_path: Path) -> None:
 
     _, warnings = walk(md_root)
 
-    assert any(w.code == "NON_NUMERIC_FILE" and w.path.name == "chapter.md" for w in warnings)
+    assert any(
+        w.code == "NON_NUMERIC_FILE" and w.path.name == "chapter.md" for w in warnings
+    )
 
 
 def test_skips_doc_directory(tmp_path: Path) -> None:
