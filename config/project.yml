@@ -1,0 +1,8 @@
+content_root: content
+images_root: public/images
+style: style
+template: templates/gost.tex
+metadata:
+  title: "Документ"
+  doctype: "Черновик"
+  date: "2024-01-01"
