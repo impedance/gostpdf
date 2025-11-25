@@ -33,6 +33,14 @@ def test_resolve_image_path_cert_branch() -> None:
     assert result == Path("/images/rosa-hrom/cert/section/file/image-cert.png")
 
 
+def test_resolve_image_path_ignores_index_filename() -> None:
+    md_path = Path("content/003.cu/02.section/0.index.md")
+
+    result = resolve_image_path(md_path, "image1.png")
+
+    assert result == Path("/images/cu/section/image1.png")
+
+
 def test_rewrite_markdown_image_links() -> None:
     md_path = Path("content/003.cu/02.section/020100.file.md")
     text = (

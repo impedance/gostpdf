@@ -40,6 +40,8 @@ def resolve_image_path(md_path: Path, image_name: str) -> Path:
         raise ValueError(f"Invalid markdown path: {md_path}")
 
     stripped = [strip_numeric(part) for part in relevant]
+    if stripped and stripped[-1] == "index":
+        stripped = stripped[:-1]
     doc_slug = stripped[1]
     relative = stripped[2:]
 
