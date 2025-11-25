@@ -38,6 +38,8 @@ def test_pipeline_runs_end_to_end(
         template_path: Path,
         output_path: Path,
         filter_paths: tuple[Path, ...] | list[Path] = (),
+        verbose: bool = False,
+        log_file: Path | None = None,
     ) -> None:
         render_calls["args"] = (
             bundle_path,
@@ -45,6 +47,8 @@ def test_pipeline_runs_end_to_end(
             template_path,
             output_path,
             tuple(filter_paths),
+            verbose,
+            log_file,
         )
         output_path.write_text("pdf", encoding="utf-8")
 
@@ -54,6 +58,7 @@ def test_pipeline_runs_end_to_end(
         collection.order,
         params.bundle_path,
         metadata=params.metadata,
+        images_root=params.images_root,
     )
 
     output_pdf = render_pdf(
@@ -75,11 +80,14 @@ def test_pipeline_runs_end_to_end(
         params.template,
         params.output_pdf,
         params.filters,
+        False,
+        None,
     )
 
-    assert "/images/cu/index/images/overview.png" in bundle.content
-    assert "/images/cu/section/chapter/diagrams/flow.png" in bundle.content
-    assert "/images/cu/section/chapter/signatures/dir/manager.png" in bundle.content
+    base = params.images_root
+    assert str(base / "cu/images/overview.png") in bundle.content
+    assert str(base / "cu/section/chapter/diagrams/flow.png") in bundle.content
+    assert str(base / "cu/section/chapter/signatures/dir/manager.png") in bundle.content
 
     assert any(warning.code == "SKIPPED_NON_MD" for warning in result.warnings)
     assert 'doctype: "Рабочая копия"' in bundle.content

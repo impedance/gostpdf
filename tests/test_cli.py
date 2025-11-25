@@ -46,8 +46,9 @@ def test_main_runs_pipeline_and_writes_warnings(
         destination: Path,
         *,
         metadata: Mapping[str, str],
+        images_root: Path,
     ) -> BundleArtifacts:
-        captured["assemble"] = (order, destination, metadata)
+        captured["assemble"] = (order, destination, metadata, images_root)
         return BundleArtifacts(path=destination, content="content")
 
     def fake_render_pdf(
@@ -57,8 +58,18 @@ def test_main_runs_pipeline_and_writes_warnings(
         template: Path,
         output: Path,
         filters: tuple[Path, ...] | list[Path] = (),
+        verbose: bool = False,
+        log_file: Path | None = None,
     ) -> Path:
-        captured["render"] = (bundle, style, template, output, tuple(filters))
+        captured["render"] = (
+            bundle,
+            style,
+            template,
+            output,
+            tuple(filters),
+            verbose,
+            log_file,
+        )
         return output
 
     warnings_written: list[StructureWarning] = []
@@ -82,7 +93,6 @@ def test_main_runs_pipeline_and_writes_warnings(
             "alt",
             "--metadata",
             "title=Override",
-            "output/report.pdf",
         ]
     )
 
@@ -91,7 +101,7 @@ def test_main_runs_pipeline_and_writes_warnings(
         "md_dir": Path("content/003.cu"),
         "config_path": Path("config/project.yml"),
         "style_override": "alt",
-        "output_override": Path("output/report.pdf"),
+        "output_override": None,
         "metadata_overrides": {"title": "Override"},
     }
     assert captured["collect"] == params.md_root
@@ -99,6 +109,7 @@ def test_main_runs_pipeline_and_writes_warnings(
         [Path("0.index.md")],
         params.bundle_path,
         params.metadata,
+        params.images_root,
     )
     assert captured["render"] == (
         params.bundle_path,
@@ -106,6 +117,8 @@ def test_main_runs_pipeline_and_writes_warnings(
         params.template,
         params.output_pdf,
         params.filters,
+        True,
+        None,
     )
 
     assert warnings_written == [warning]

@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 import re
+from pathlib import Path
 from typing import Callable
 
 
@@ -19,15 +19,18 @@ def strip_numeric(stem: str) -> str:
     return stem.split(".", 1)[-1] if "." in stem else stem
 
 
-def resolve_image_path(md_path: Path, image_name: str) -> Path:
-    """Map a markdown file and image name to an absolute images path.
+def resolve_image_path(
+    md_path: Path, image_name: str, images_root: Path | str = Path("/images")
+) -> Path:
+    """Map a markdown file and image name to an images path under ``images_root``.
 
     The resulting path mirrors the markdown location without numeric prefixes
-    and is rooted at ``/images``. ``image_name`` may start with slashes, which
-    are ignored for resolution.
+    and is rooted at ``images_root``. ``image_name`` may start with slashes,
+    which are ignored for resolution.
     """
 
     image = image_name.lstrip("/")
+    base = Path(images_root)
     parts = list(md_path.with_suffix("").parts)
 
     try:
@@ -45,7 +48,7 @@ def resolve_image_path(md_path: Path, image_name: str) -> Path:
     doc_slug = stripped[1]
     relative = stripped[2:]
 
-    return Path("/images") / doc_slug / Path(*relative) / image
+    return base / doc_slug / Path(*relative) / image
 
 
 def _rewrite_markdown_image(

@@ -1,26 +1,33 @@
 from pathlib import Path
 import subprocess
+import io
 
 import pytest
 
 from md2pdf.pandoc_runner import render
 
 
-class _StubResult:
-    def __init__(self, returncode: int = 0, stderr: str = "") -> None:
+class _StubProcess:
+    def __init__(self, returncode: int = 0, output: str = "", env: dict[str, str] | None = None) -> None:
         self.returncode = returncode
-        self.stderr = stderr
+        self.stdout = io.StringIO(output)
+        self.env = env or {}
+
+    def wait(self) -> None:  # pragma: no cover - simple stub
+        return
 
 
 def test_render_invokes_pandoc_with_filters(monkeypatch: pytest.MonkeyPatch) -> None:
     captured_command: list[str] = []
+    captured_env: dict[str, str] = {}
 
-    def fake_run(*args, **kwargs):  # type: ignore[no-untyped-def]
-        nonlocal captured_command
-        captured_command = list(args[0])
-        return _StubResult()
+    def fake_popen(cmd, **kwargs):  # type: ignore[no-untyped-def]
+        nonlocal captured_command, captured_env
+        captured_command = list(cmd)
+        captured_env = kwargs.get("env", {})
+        return _StubProcess(output="")
 
-    monkeypatch.setattr(subprocess, "run", fake_run)
+    monkeypatch.setattr(subprocess, "Popen", fake_popen)
 
     bundle = Path("bundle.md")
     style = Path("styles/style.yaml")
@@ -49,13 +56,14 @@ def test_render_invokes_pandoc_with_filters(monkeypatch: pytest.MonkeyPatch) -> 
         "--lua-filter",
         str(filters[1]),
     ]
+    assert "TEXMFVAR" in captured_env
 
 
 def test_render_raises_on_failure(monkeypatch: pytest.MonkeyPatch) -> None:
-    def fake_run(*args, **kwargs):  # type: ignore[no-untyped-def]
-        return _StubResult(returncode=1, stderr="pandoc error")
+    def fake_popen(*args, **kwargs):  # type: ignore[no-untyped-def]
+        return _StubProcess(returncode=1, output="pandoc error")
 
-    monkeypatch.setattr(subprocess, "run", fake_run)
+    monkeypatch.setattr(subprocess, "Popen", fake_popen)
 
     with pytest.raises(RuntimeError) as excinfo:
         render(
@@ -72,10 +80,10 @@ def test_render_sets_texmfvar(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -
     def fake_run(*args, **kwargs):  # type: ignore[no-untyped-def]
         nonlocal captured_env
         captured_env = kwargs.get("env", {})
-        return _StubResult()
+        return _StubProcess()
 
     monkeypatch.chdir(tmp_path)
-    monkeypatch.setattr(subprocess, "run", fake_run)
+    monkeypatch.setattr(subprocess, "Popen", lambda *args, **kwargs: fake_run(*args, **kwargs))
 
     render(Path("bundle.md"), Path("style.yaml"), Path("template.tex"), Path("out.pdf"))
 
@@ -91,10 +99,10 @@ def test_render_respects_existing_texmfvar(
     def fake_run(*args, **kwargs):  # type: ignore[no-untyped-def]
         nonlocal captured_env
         captured_env = kwargs.get("env", {})
-        return _StubResult()
+        return _StubProcess()
 
     monkeypatch.setenv("TEXMFVAR", str(tmp_path / "cache"))
-    monkeypatch.setattr(subprocess, "run", fake_run)
+    monkeypatch.setattr(subprocess, "Popen", lambda *args, **kwargs: fake_run(*args, **kwargs))
 
     render(Path("bundle.md"), Path("style.yaml"), Path("template.tex"), Path("out.pdf"))
 

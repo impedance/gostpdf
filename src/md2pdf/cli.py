@@ -136,6 +136,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 collection.order,
                 params.bundle_path,
                 metadata=params.metadata,
+                images_root=params.images_root,
             )
 
             progress.stage(

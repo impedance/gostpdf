@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+import shutil
 from pathlib import Path
 from typing import Any, cast
 
@@ -212,6 +213,27 @@ def test_assemble_bundle_uses_custom_image_resolver(tmp_path: Path) -> None:
     assert calls, "custom resolver should be invoked at least once"
 
 
+def test_assemble_bundle_uses_images_root_when_resolver_missing(tmp_path: Path) -> None:
+    destination = tmp_path / "bundle.md"
+    md_root = tmp_path / "content" / "003.cu"
+    source_root = Path(__file__).parent / "fixtures" / "bundle" / "003.cu"
+    shutil.copytree(source_root, md_root)
+    order = [
+        md_root / "0.index.md",
+        md_root / "010000.overview.md",
+        md_root / "01.section" / "010100.chapter.md",
+    ]
+
+    result = assemble_bundle(
+        order,
+        destination,
+        metadata={"title": "Куратор"},
+        images_root=Path("public/images"),
+    )
+
+    assert "public/images/cu/overview.png" in result.content
+
+
 def test_render_pdf_invokes_pandoc_runner(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
@@ -232,6 +254,8 @@ def test_render_pdf_invokes_pandoc_runner(
         template_path: Path,
         output_path: Path,
         filter_paths: tuple[Path, ...] | list[Path] = (),
+        verbose: bool = False,
+        log_file: Path | None = None,
     ) -> None:
         captured["args"] = (
             bundle_path,
@@ -239,6 +263,8 @@ def test_render_pdf_invokes_pandoc_runner(
             template_path,
             output_path,
             tuple(filter_paths),
+            verbose,
+            log_file,
         )
 
     monkeypatch.setattr(pipeline, "_render", fake_render)
@@ -253,7 +279,15 @@ def test_render_pdf_invokes_pandoc_runner(
 
     assert output.parent.exists()
     assert result == output
-    assert captured["args"] == (bundle, style, template, output, tuple(filters))
+    assert captured["args"] == (
+        bundle,
+        style,
+        template,
+        output,
+        tuple(filters),
+        False,
+        None,
+    )
 
 
 def test_render_pdf_validates_bundle(tmp_path: Path) -> None:

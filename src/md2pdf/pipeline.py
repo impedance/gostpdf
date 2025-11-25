@@ -104,10 +104,19 @@ def assemble_bundle(
     *,
     metadata: Mapping[str, Any] | None = None,
     image_resolver: Callable[[Path, str], Path] | None = None,
+    images_root: Path | str | None = None,
 ) -> BundleArtifacts:
-    """Собрать и записать итоговый markdown-бандл."""
+    """Собрать и записать итоговый markdown-бандл.
 
-    resolver = image_resolver or resolve_image_path
+    Если ``image_resolver`` не указан, используется :func:`resolve_image_path`
+    с базой ``images_root`` (по умолчанию ``/images``).
+    """
+
+    resolver = image_resolver or (
+        lambda md_path, image: resolve_image_path(
+            md_path, image, images_root or Path("/images")
+        )
+    )
     content = build_bundle_text(order, resolver, metadata)
     bundle_path = write_bundle(content, destination)
     return BundleArtifacts(path=bundle_path, content=content)
