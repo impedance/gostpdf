@@ -69,3 +69,16 @@ def test_rewrite_html_and_sign_images() -> None:
 def test_resolve_image_path_rejects_invalid_root() -> None:
     with pytest.raises(ValueError):
         resolve_image_path(Path("/tmp/other/020100.file.md"), "image.png")
+
+
+def test_rewrite_images_respects_custom_resolver() -> None:
+    md_path = Path("content/003.cu/0.index.md")
+    text = "![Alt](./image.png)"
+
+    def resolver(current_md: Path, image: str) -> Path:  # pragma: no cover - simple wrapper
+        assert current_md == md_path
+        return Path("/static") / image
+
+    result = rewrite_images(md_path, text, resolver=resolver)
+
+    assert result == "![Alt](/static/image.png)"
