@@ -4,7 +4,7 @@ import io
 
 import pytest
 
-from md2pdf.pandoc_runner import render
+from md2pdf.pandoc_runner import PANDOC_MARKDOWN_FORMAT, render
 
 
 class _StubProcess:
@@ -41,7 +41,7 @@ def test_render_invokes_pandoc_with_filters(monkeypatch: pytest.MonkeyPatch) -> 
         "pandoc",
         str(bundle),
         "--from",
-        "markdown+yaml_metadata_block",
+        PANDOC_MARKDOWN_FORMAT,
         "--template",
         str(template),
         "--pdf-engine",
