@@ -1,12 +1,23 @@
+from __future__ import annotations
+
+from collections.abc import Callable
 from pathlib import Path
+from typing import Any, cast
 
 import pytest
 
+from md2pdf import pipeline
 from md2pdf.pipeline import (
+    BundleArtifacts,
     MarkdownCollection,
     PipelineParams,
+    PipelineResult,
+    aggregate_result,
+    assemble_bundle,
     collect_markdown,
+    merge_warnings,
     prepare_params,
+    render_pdf,
 )
 from md2pdf.reporting import StructureWarning
 
@@ -44,6 +55,26 @@ def _prepare_project_layout(base_dir: Path) -> tuple[Path, Path]:
     (templates_dir / "gost.tex").write_text("% template", encoding="utf-8")
 
     return md_root, images_root
+
+
+def _fixture_order() -> list[Path]:
+    base = Path(__file__).parent / "fixtures" / "bundle" / "003.cu"
+    return [
+        base / "0.index.md",
+        base / "010000.overview.md",
+        base / "01.section" / "010100.chapter.md",
+    ]
+
+
+def _fixture_resolver(md_root: Path) -> Callable[[Path, str], Path]:
+    doc_slug = md_root.name.split(".", 1)[-1]
+
+    def resolver(md_path: Path, image_name: str) -> Path:
+        relative = md_path.relative_to(md_root)
+        parents = [part.split(".", 1)[-1] for part in relative.parts[:-1]]
+        return Path("/images") / doc_slug / Path(*parents) / image_name
+
+    return resolver
 
 
 def test_collect_markdown_returns_order(tmp_path: Path) -> None:
@@ -136,9 +167,157 @@ def test_prepare_params_validates_metadata_override_type(tmp_path: Path) -> None
     config_path = tmp_path / "config" / "project.yml"
     _write_config(config_path)
 
+    bad_overrides = cast(Any, [("title", "bad")])
+
     with pytest.raises(ValueError, match="metadata overrides must be a mapping"):
-        prepare_params(  # type: ignore[arg-type]
+        prepare_params(
             md_dir=md_root,
             config_path=config_path,
-            metadata_overrides=[("title", "bad")],
+            metadata_overrides=bad_overrides,
         )
+
+
+def test_assemble_bundle_builds_and_writes(tmp_path: Path) -> None:
+    destination = tmp_path / "bundle.md"
+    md_root = Path(__file__).parent / "fixtures" / "bundle" / "003.cu"
+
+    result = assemble_bundle(
+        _fixture_order(),
+        destination,
+        metadata={"title": "Куратор"},
+        image_resolver=_fixture_resolver(md_root),
+    )
+
+    assert isinstance(result, BundleArtifacts)
+    assert result.path == destination
+    assert destination.exists()
+    assert destination.read_text(encoding="utf-8") == result.content
+    assert 'title: "Куратор"' in result.content
+
+
+def test_assemble_bundle_uses_custom_image_resolver(tmp_path: Path) -> None:
+    calls: list[tuple[Path, str]] = []
+
+    def resolver(md_path: Path, image_name: str) -> Path:
+        calls.append((md_path, image_name))
+        return Path("/assets") / image_name
+
+    result = assemble_bundle(
+        _fixture_order(),
+        tmp_path / "bundle.md",
+        image_resolver=resolver,
+    )
+
+    assert any("/assets/diagram.png" in line for line in result.content.splitlines())
+    assert calls, "custom resolver should be invoked at least once"
+
+
+def test_render_pdf_invokes_pandoc_runner(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    bundle = tmp_path / "bundle.md"
+    bundle.write_text("content", encoding="utf-8")
+    style = tmp_path / "style.yaml"
+    style.write_text("", encoding="utf-8")
+    template = tmp_path / "template.tex"
+    template.write_text("", encoding="utf-8")
+    output = tmp_path / "out" / "report.pdf"
+    filters = [tmp_path / "first.lua", tmp_path / "second.lua"]
+
+    captured: dict[str, object] = {}
+
+    def fake_render(
+        bundle_path: Path,
+        style_path: Path,
+        template_path: Path,
+        output_path: Path,
+        filter_paths: tuple[Path, ...] | list[Path] = (),
+    ) -> None:
+        captured["args"] = (
+            bundle_path,
+            style_path,
+            template_path,
+            output_path,
+            tuple(filter_paths),
+        )
+
+    monkeypatch.setattr(pipeline, "_render", fake_render)
+
+    result = render_pdf(
+        bundle,
+        style=style,
+        template=template,
+        output=output,
+        filters=filters,
+    )
+
+    assert output.parent.exists()
+    assert result == output
+    assert captured["args"] == (bundle, style, template, output, tuple(filters))
+
+
+def test_render_pdf_validates_bundle(tmp_path: Path) -> None:
+    missing_bundle = tmp_path / "missing.md"
+    style = tmp_path / "style.yaml"
+    style.write_text("", encoding="utf-8")
+    template = tmp_path / "template.tex"
+    template.write_text("", encoding="utf-8")
+    output = tmp_path / "report.pdf"
+
+    with pytest.raises(ValueError, match="Missing bundle file"):
+        render_pdf(
+            missing_bundle,
+            style=style,
+            template=template,
+            output=output,
+        )
+
+    directory_bundle = tmp_path / "dir"
+    directory_bundle.mkdir()
+
+    with pytest.raises(ValueError, match="Expected file, got directory"):
+        render_pdf(
+            directory_bundle,
+            style=style,
+            template=template,
+            output=output,
+        )
+
+
+def test_merge_warnings_deduplicates_and_preserves_order() -> None:
+    first = StructureWarning(
+        code="MISSING_INDEX",
+        path=Path("content/001.doc"),
+        message="Нет индексного файла",
+    )
+    duplicate = StructureWarning(
+        code="MISSING_INDEX",
+        path=Path("content/001.doc"),
+        message="Нет индексного файла",
+    )
+    second = StructureWarning(
+        code="NON_NUMERIC_FILE",
+        path=Path("content/001.doc/notes.md"),
+        message="Файл без префикса",
+    )
+
+    merged = merge_warnings([first], [duplicate, second])
+
+    assert merged == (first, second)
+
+
+def test_aggregate_result_wraps_paths_and_warnings() -> None:
+    bundle_path = Path("bundle.md")
+    pdf_path = Path("output/report.pdf")
+    warning = StructureWarning(
+        code="SKIPPED_NON_MD",
+        path=Path("content/001.doc/doc"),
+        message="Пропущен не-markdown файл",
+    )
+
+    result = aggregate_result(bundle_path, pdf_path, [warning])
+
+    assert isinstance(result, PipelineResult)
+    assert result.bundle_path == bundle_path
+    assert result.output_pdf == pdf_path
+    assert result.warnings == (warning,)

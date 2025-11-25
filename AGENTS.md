@@ -20,6 +20,7 @@ public/images/cu/section/chapter/image1.png
 ## Getting Started (для джуна)
 1) Установите Python 3.11+, Pandoc 3.x, LaTeX (xelatex).  
 2) Создайте виртуальное окружение (`python -m venv .venv && source .venv/bin/activate` или аналог) и фиксируйте зависимости в lock-файле (`requirements.txt`, `uv.lock`, `poetry.lock`) после установки. **Перед каждой работой активируйте .venv (например, `source .venv/bin/activate`) и убедитесь, что `which python`/`pytest` указывают на него.**  
+   Всегда начинайте с `source .venv/bin/activate` и используйте `./.venv/bin/python`, `./.venv/bin/pytest` для команд.
 3) Локальный инструментарий: `pip install ruff pytest` (типизацию можно позже).  
 4) Перед правками прогоните быстрый цикл: `ruff check . && ruff format . && mypy . && pytest`.
 5) Рендер PDF выполняйте только при необходимости, чтобы экономить время.

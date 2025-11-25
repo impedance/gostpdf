@@ -108,7 +108,10 @@ def rewrite_images(
 
     transformers: list[tuple[re.Pattern[str], Callable[[Path, re.Match[str]], str]]] = [
         (sign_pattern, lambda md, m: _rewrite_sign_image(md, m, image_resolver)),
-        (markdown_pattern, lambda md, m: _rewrite_markdown_image(md, m, image_resolver)),
+        (
+            markdown_pattern,
+            lambda md, m: _rewrite_markdown_image(md, m, image_resolver),
+        ),
         (html_pattern, lambda md, m: _rewrite_html_image(md, m, image_resolver)),
     ]
 

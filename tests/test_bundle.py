@@ -1,3 +1,4 @@
+from collections.abc import Callable
 from pathlib import Path
 from textwrap import dedent
 
@@ -8,7 +9,7 @@ def _strip_numeric(stem: str) -> str:
     return stem.split(".", 1)[-1] if "." in stem else stem
 
 
-def _make_resolver(md_root: Path):
+def _make_resolver(md_root: Path) -> Callable[[Path, str], Path]:
     doc_slug = _strip_numeric(md_root.name)
 
     def resolver(md_path: Path, image_name: str) -> Path:
@@ -89,8 +90,7 @@ def test_build_merges_metadata_and_uses_overrides() -> None:
         author: "Команда"
         ---
         """
-        )
-        .strip()
+        ).strip()
         + "\n\n"
     )
 

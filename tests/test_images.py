@@ -75,7 +75,9 @@ def test_rewrite_images_respects_custom_resolver() -> None:
     md_path = Path("content/003.cu/0.index.md")
     text = "![Alt](./image.png)"
 
-    def resolver(current_md: Path, image: str) -> Path:  # pragma: no cover - simple wrapper
+    def resolver(
+        current_md: Path, image: str
+    ) -> Path:  # pragma: no cover - simple wrapper
         assert current_md == md_path
         return Path("/static") / image
 

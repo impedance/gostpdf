@@ -58,7 +58,9 @@ def test_render_raises_on_failure(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(subprocess, "run", fake_run)
 
     with pytest.raises(RuntimeError) as excinfo:
-        render(Path("bundle.md"), Path("style.yaml"), Path("template.tex"), Path("out.pdf"))
+        render(
+            Path("bundle.md"), Path("style.yaml"), Path("template.tex"), Path("out.pdf")
+        )
 
     assert "pandoc error" in str(excinfo.value)
     assert "pandoc bundle.md" in str(excinfo.value)

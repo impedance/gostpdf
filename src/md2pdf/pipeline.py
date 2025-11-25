@@ -3,10 +3,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from itertools import chain
 from pathlib import Path
-from typing import Any, Iterable, Mapping
+from typing import Any, Callable, Iterable, Mapping, Sequence, Tuple
 
+from .bundle import build as build_bundle_text
+from .bundle import write_bundle
 from .config import ProjectConfig, load_config
+from .images import resolve_image_path
+from .pandoc_runner import render as _render
 from .reporting import StructureWarning
 from .walker import walk
 
@@ -31,6 +36,23 @@ class MarkdownCollection:
 
     order: list[Path]
     warnings: list[StructureWarning] = field(default_factory=list)
+
+
+@dataclass(frozen=True, slots=True)
+class BundleArtifacts:
+    """Container for a rendered bundle and its location on disk."""
+
+    path: Path
+    content: str
+
+
+@dataclass(frozen=True, slots=True)
+class PipelineResult:
+    """Result of a pipeline run with aggregated warnings."""
+
+    bundle_path: Path
+    output_pdf: Path | None
+    warnings: tuple[StructureWarning, ...]
 
 
 def prepare_params(
@@ -76,6 +98,41 @@ def collect_markdown(
     return MarkdownCollection(order=ordered, warnings=accumulated_warnings)
 
 
+def assemble_bundle(
+    order: Sequence[Path],
+    destination: Path,
+    *,
+    metadata: Mapping[str, Any] | None = None,
+    image_resolver: Callable[[Path, str], Path] | None = None,
+) -> BundleArtifacts:
+    """Собрать и записать итоговый markdown-бандл."""
+
+    resolver = image_resolver or resolve_image_path
+    content = build_bundle_text(order, resolver, metadata)
+    bundle_path = write_bundle(content, destination)
+    return BundleArtifacts(path=bundle_path, content=content)
+
+
+def render_pdf(
+    bundle: Path,
+    *,
+    style: Path,
+    template: Path,
+    output: Path,
+    filters: Sequence[Path] = (),
+) -> Path:
+    """Подготовить и вызвать рендер PDF через Pandoc."""
+
+    if not bundle.exists():
+        raise ValueError(f"Missing bundle file: {bundle}")
+    if not bundle.is_file():
+        raise ValueError(f"Expected file, got directory: {bundle}")
+
+    output.parent.mkdir(parents=True, exist_ok=True)
+    _render(bundle, style, template, output, filters)
+    return output
+
+
 def _ensure_directory(path: Path) -> None:
     if not path.exists():
         raise ValueError(f"Missing directory: {path}")
@@ -115,3 +172,35 @@ def _resolve_output(override: Path | None, configured: Path | None) -> Path:
     if output is None:
         raise ValueError("Output path must be provided via CLI or config")
     return output
+
+
+def merge_warnings(
+    *sources: Iterable[StructureWarning],
+) -> tuple[StructureWarning, ...]:
+    """Combine warnings from independent pipeline stages."""
+
+    merged: list[StructureWarning] = []
+    seen: set[Tuple[str, Path, str]] = set()
+
+    for warning in chain.from_iterable(sources):
+        key = (warning.code, warning.path, warning.message)
+        if key in seen:
+            continue
+        seen.add(key)
+        merged.append(warning)
+
+    return tuple(merged)
+
+
+def aggregate_result(
+    bundle_path: Path,
+    output_pdf: Path | None,
+    *warning_sources: Iterable[StructureWarning],
+) -> PipelineResult:
+    """Construct pipeline result with merged warnings."""
+
+    return PipelineResult(
+        bundle_path=bundle_path,
+        output_pdf=output_pdf,
+        warnings=merge_warnings(*warning_sources),
+    )
