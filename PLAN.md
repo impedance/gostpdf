@@ -13,7 +13,7 @@
   - [x] Обвязка `walker` (сбор Markdown и предупреждений).
   - [ ] Обвязка `bundle` (сбор и запись бандла).
   - [ ] Обвязка `pandoc_runner` (вызов рендера PDF).
-  - [ ] Агрегация результатов/предупреждений.
+  - [x] Агрегация результатов/предупреждений.
 
 ## Последовательные/блокирующие шаги
 - **T4 — CLI**: `cli.main(argv=None) -> int`, argparse (`--md-dir`, `--config` default `config/project.yml`, `--style`, `--metadata key=value`, позиционный output), вывод warnings через reporting, возврат кодов. Зависит от T3/T5.
