@@ -1,10 +1,13 @@
+<<<<<<< HEAD
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any, Iterable, Mapping
 
 from .config import ProjectConfig, load_config
+from .reporting import StructureWarning
+from .walker import walk
 
 
 @dataclass(frozen=True, slots=True)
@@ -19,6 +22,14 @@ class PipelineParams:
     metadata: Mapping[str, Any]
     bundle_path: Path
     output_pdf: Path
+
+
+@dataclass(frozen=True, slots=True)
+class MarkdownCollection:
+    """Ordered markdown files and accumulated warnings."""
+
+    order: list[Path]
+    warnings: list[StructureWarning] = field(default_factory=list)
 
 
 def prepare_params(
@@ -50,6 +61,18 @@ def prepare_params(
         bundle_path=resolved_bundle,
         output_pdf=output_pdf,
     )
+
+
+def collect_markdown(
+    md_root: Path, warnings: Iterable[StructureWarning] | None = None
+) -> MarkdownCollection:
+    """Walk the markdown tree, preserving incoming warnings."""
+
+    accumulated_warnings = list(warnings or [])
+    ordered, walker_warnings = walk(md_root)
+    accumulated_warnings.extend(walker_warnings)
+
+    return MarkdownCollection(order=ordered, warnings=accumulated_warnings)
 
 
 def _ensure_directory(path: Path) -> None:
@@ -93,3 +116,35 @@ def _resolve_output(
     if output is None:
         raise ValueError("Output path must be provided via CLI or config")
     return output
+=======
+"""Pipeline helpers orchestrating content traversal and aggregation."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Iterable, List
+
+from .reporting import StructureWarning
+from .walker import walk
+
+
+@dataclass(frozen=True, slots=True)
+class MarkdownCollection:
+    """Ordered markdown files and accumulated warnings."""
+
+    order: List[Path]
+    warnings: List[StructureWarning] = field(default_factory=list)
+
+
+def collect_markdown(
+    md_root: Path, warnings: Iterable[StructureWarning] | None = None
+) -> MarkdownCollection:
+    """Walk the markdown tree, preserving incoming warnings."""
+
+    accumulated_warnings = list(warnings or [])
+    ordered, walker_warnings = walk(md_root)
+    accumulated_warnings.extend(walker_warnings)
+
+    return MarkdownCollection(order=ordered, warnings=accumulated_warnings)
+>>>>>>> origin/codex/-2
