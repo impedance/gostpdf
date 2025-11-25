@@ -21,7 +21,7 @@ public/images/cu/section/chapter/image1.png
 1) Установите Python 3.11+, Pandoc 3.x, LaTeX (xelatex).  
 2) Создайте виртуальное окружение (`python -m venv .venv && source .venv/bin/activate` или аналог) и фиксируйте зависимости в lock-файле (`requirements.txt`, `uv.lock`, `poetry.lock`) после установки.  
 3) Локальный инструментарий: `pip install ruff pytest` (типизацию можно позже).  
-4) Перед правками прогоните быстрый цикл: `ruff check . && ruff format . && pytest`.  
+4) Перед правками прогоните быстрый цикл: `ruff check . && ruff format . && mypy . && pytest`.
 5) Рендер PDF выполняйте только при необходимости, чтобы экономить время.
 
 ## Build, Test, and Development Commands
@@ -36,7 +36,7 @@ public/images/cu/section/chapter/image1.png
   style: style
   template: templates/gost.tex
   ```
-- Быстрый цикл: `ruff check .`, `ruff format .`, `pytest`.
+- Быстрый цикл: `ruff check .`, `ruff format .`, `mypy .`, `pytest`.
 - Smoke-проверка окружения перед рендером: `pandoc --version` и `xelatex --version`.
 
 ## Coding Style & Naming Conventions

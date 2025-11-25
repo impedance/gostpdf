@@ -9,3 +9,14 @@ testpaths = ["tests"]
 
 [tool.ruff]
 target-version = "py311"
+
+[tool.mypy]
+python_version = "3.11"
+files = ["src/md2pdf"]
+show_error_codes = true
+warn_unused_configs = true
+mypy_path = ["src"]
+
+[[tool.mypy.overrides]]
+module = "md2pdf.walker"
+strict = true
