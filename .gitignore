@@ -1,0 +1,11 @@
+# Virtual environment
+.venv/
+
+# Bytecode and caches
+__pycache__/
+*.py[cod]
+.ruff_cache/
+.pytest_cache/
+
+# OS files
+.DS_Store
