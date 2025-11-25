@@ -1,7 +1,7 @@
 from pathlib import Path
 from textwrap import dedent
 
-from md2pdf.bundle import DEFAULT_BUNDLE_METADATA, build
+from md2pdf.bundle import DEFAULT_BUNDLE_METADATA, build, write_bundle
 
 
 def _strip_numeric(stem: str) -> str:
@@ -60,3 +60,50 @@ def test_builds_bundle_with_front_matter_and_titles() -> None:
     )
 
     assert output == expected
+
+
+def test_build_merges_metadata_and_uses_overrides() -> None:
+    md_root = Path(__file__).parent / "fixtures" / "bundle" / "003.cu"
+    order = [
+        md_root / "0.index.md",
+        md_root / "010000.overview.md",
+        md_root / "01.section" / "010100.chapter.md",
+    ]
+
+    resolver = _make_resolver(md_root)
+    metadata = {
+        "title": "Кастомный документ",
+        "doctype": "Спецификация",
+        "author": "Команда",
+    }
+
+    output = build(order, resolver, metadata)
+
+    expected_front_matter = (
+        dedent(
+            """
+        ---
+        title: "Кастомный документ"
+        doctype: "Спецификация"
+        date: "1970-01-01"
+        author: "Команда"
+        ---
+        """
+        )
+        .strip()
+        + "\n\n"
+    )
+
+    assert output.startswith(expected_front_matter)
+    assert "# Обзор возможностей" in output
+
+
+def test_write_bundle_creates_parent_directory(tmp_path: Path) -> None:
+    target = tmp_path / "nested" / "bundle.md"
+    content = "bundle content"
+
+    written_path = write_bundle(content, target)
+
+    assert written_path == target
+    assert target.exists()
+    assert target.read_text(encoding="utf-8") == content
