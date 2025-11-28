@@ -26,11 +26,26 @@ def resolve_image_path(
 
     The resulting path mirrors the markdown location without numeric prefixes
     and is rooted at ``images_root``. ``image_name`` may start with slashes,
-    which are ignored for resolution.
+    which are ignored for resolution unless the target is already rooted under
+    ``images_root``.
     """
 
-    image = image_name.lstrip("/")
     base = Path(images_root)
+    original = Path(image_name)
+
+    if original.is_absolute():
+        return original
+
+    normalized = image_name.lstrip("/")
+    base_prefix = base.as_posix().lstrip("/")
+
+    if base_prefix and (
+        normalized == base_prefix or normalized.startswith(f"{base_prefix}/")
+    ):
+        prefix = "/" if str(base).startswith("/") else ""
+        return Path(prefix + normalized)
+
+    image = normalized
     parts = list(md_path.with_suffix("").parts)
 
     try:
