@@ -187,14 +187,14 @@ $endif$
   belowskip=$figures.spacing.after$
 }
 
-% Формат подписей "Таблица N – ..." и "Рисунок N – ..."
+% Формат подписей: таблицы с префиксом, рисунки используют текст из Markdown
 \renewcommand{\tablename}{Таблица}
 \renewcommand{\figurename}{Рисунок}
 \renewcommand{\thetable}{\arabic{table}}
 \renewcommand{\thefigure}{\arabic{figure}}
 \DeclareCaptionLabelFormat{dash}{#1~#2~--}
 \captionsetup[table]{labelformat=dash}
-\captionsetup[figure]{labelformat=dash}
+\captionsetup[figure]{labelformat=empty}
 
 % ========= Области кода =========
 \lstset{
