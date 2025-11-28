@@ -98,6 +98,20 @@ def test_build_merges_metadata_and_uses_overrides() -> None:
     assert "# Обзор возможностей" in output
 
 
+def test_build_uses_first_heading_when_metadata_missing(tmp_path: Path) -> None:
+    md_root = tmp_path / "content" / "003.cu"
+    md_root.mkdir(parents=True)
+    md_file = md_root / "010100.nazna-kompl.md"
+    md_file.write_text("# Назначение Комплекса\n\nОписание раздела.", encoding="utf-8")
+
+    resolver = _make_resolver(md_root)
+    output = build([md_file], resolver)
+
+    assert output.count("# Назначение Комплекса") == 1
+    assert "nazna kompl" not in output
+    assert "Описание раздела." in output
+
+
 def test_write_bundle_creates_parent_directory(tmp_path: Path) -> None:
     target = tmp_path / "nested" / "bundle.md"
     content = "bundle content"

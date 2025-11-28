@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
+import re
 from pathlib import Path
 from typing import Any
 
@@ -45,8 +46,9 @@ def build(
         metadata, body = _split_front_matter(raw)
         rewritten_body = rewrite_images(md_path, body, resolver=image_resolver)
         heading_level = _heading_level(base_root, md_path)
-        title = metadata.get("title", _derive_title(md_path))
-        section = _render_section(title, rewritten_body, heading_level)
+        heading_title, body_without_heading = _extract_heading(rewritten_body)
+        title = metadata.get("title") or heading_title or _derive_title(md_path)
+        section = _render_section(title, body_without_heading, heading_level)
         bundle_parts.append(section)
 
     return "\n\n".join(part for part in bundle_parts if part.strip()) + "\n"
@@ -121,6 +123,22 @@ def _derive_title(md_path: Path) -> str:
 
 def _strip_numeric(stem: str) -> str:
     return stem.split(".", 1)[-1] if "." in stem else stem
+
+
+def _extract_heading(text: str) -> tuple[str | None, str]:
+    lines = text.splitlines()
+    index = 0
+
+    while index < len(lines) and not lines[index].strip():
+        index += 1
+
+    if index < len(lines):
+        match = re.match(r"^\s*#{1,6}\s+(?P<title>.+?)\s*$", lines[index])
+        if match:
+            remaining = "\n".join(lines[index + 1 :]).lstrip("\n")
+            return match.group("title"), remaining
+
+    return None, text
 
 
 def _render_section(title: str, body: str, level: int) -> str:
