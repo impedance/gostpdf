@@ -105,16 +105,18 @@ def assemble_bundle(
     metadata: Mapping[str, Any] | None = None,
     image_resolver: Callable[[Path, str], Path] | None = None,
     images_root: Path | str | None = None,
+    params: PipelineParams | None = None,
 ) -> BundleArtifacts:
     """Собрать и записать итоговый markdown-бандл.
 
     Если ``image_resolver`` не указан, используется :func:`resolve_image_path`
-    с базой ``images_root`` (по умолчанию ``/images``).
+    с базой ``images_root`` (по умолчанию значение из конфига или ``/images``).
     """
 
+    resolved_images_root = _resolve_images_root(images_root, params)
     resolver = image_resolver or (
         lambda md_path, image: resolve_image_path(
-            md_path, image, images_root or Path("/images")
+            md_path, image, resolved_images_root
         )
     )
     content = build_bundle_text(order, resolver, metadata)
@@ -191,6 +193,16 @@ def _resolve_output(override: Path | None, configured: Path | None) -> Path:
     if output is None:
         raise ValueError("Output path must be provided via CLI or config")
     return output
+
+
+def _resolve_images_root(
+    images_root: Path | str | None, params: PipelineParams | None
+) -> Path:
+    if images_root is not None:
+        return Path(images_root)
+    if params is not None:
+        return params.images_root
+    return Path("/images")
 
 
 def merge_warnings(
