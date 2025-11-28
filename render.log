@@ -1,6 +1,8 @@
 [md2pdf] Collecting markdown from content/003.cu/02.ekspluatatsiya
 [md2pdf] Building bundle -> output/ekspluatatsiya.bundle.md
 [md2pdf] Rendering PDF to output/ekspluatatsiya.pdf (style: style.yaml)
+[WARNING] Could not fetch resource public/images/cu/ekspluatatsiya/ctrl-uzlam/migra-uzlov-na-rosa/image90.png: replacing image with description
+[WARNING] Could not fetch resource public/images/cu/ekspluatatsiya/ctrl-uzlam/migra-uzlov-na-rosa/image92.png: replacing image with description
 [WARNING] Missing character: There is no В (U+0412) (U+0412) in font Latin Modern Mono 10 Regular/
 [WARNING] Missing character: There is no х (U+0445) (U+0445) in font Latin Modern Mono 10 Regular/
 [WARNING] Missing character: There is no о (U+043E) (U+043E) in font Latin Modern Mono 10 Regular/
