@@ -234,6 +234,26 @@ def test_assemble_bundle_uses_images_root_when_resolver_missing(tmp_path: Path) 
     assert "public/images/cu/overview.png" in result.content
 
 
+def test_assemble_bundle_rewrites_sign_image_with_images_root(tmp_path: Path) -> None:
+    destination = tmp_path / "bundle.md"
+    project_root = tmp_path / "project"
+    source_root = Path(__file__).parent / "fixtures" / "pipeline"
+    shutil.copytree(source_root, project_root)
+
+    md_root = project_root / "content" / "003.cu"
+    order = [
+        md_root / "0.index.md",
+        md_root / "01.section" / "0.index.md",
+        md_root / "01.section" / "010100.chapter.md",
+    ]
+
+    result = assemble_bundle(order, destination, images_root=Path("public/images"))
+
+    rewritten = "public/images/cu/section/chapter/signatures/dir/manager.png"
+    assert rewritten in result.content
+    assert "(/images/" not in result.content
+
+
 def test_render_pdf_invokes_pandoc_runner(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
