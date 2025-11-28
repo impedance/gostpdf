@@ -80,12 +80,41 @@ def _rewrite_html_image(
     return f"{prefix}{resolved}{suffix}"
 
 
-def _rewrite_sign_image(
+def _render_sign_image(resolved: Path, caption: str, has_trailing_newline: bool) -> str:
+    suffix = "\n" if has_trailing_newline else ""
+    return f"![{caption}]({resolved}){suffix}"
+
+
+def _parse_sign_metadata(block: str) -> tuple[str | None, str]:
+    metadata: dict[str, str] = {}
+    for line in block.splitlines():
+        if ":" not in line:
+            continue
+        key, value = line.split(":", 1)
+        metadata[key.strip()] = value.strip()
+
+    src = metadata.get("src")
+    caption = metadata.get("sign", "")
+    return src, caption
+
+
+def _rewrite_sign_block(
+    md_path: Path, match: re.Match[str], resolver: Callable[[Path, str], Path]
+) -> str:
+    src, caption = _parse_sign_metadata(match.group("meta"))
+    if src is None:
+        return match.group(0)
+
+    resolved = resolver(md_path, src.lstrip("/"))
+    return _render_sign_image(resolved, caption, match.group(0).endswith("\n"))
+
+
+def _rewrite_sign_inline(
     md_path: Path, match: re.Match[str], resolver: Callable[[Path, str], Path]
 ) -> str:
     src = match.group("src")
     resolved = resolver(md_path, src.lstrip("/"))
-    return match.group(0).replace(src, str(resolved))
+    return _render_sign_image(resolved, "", match.group(0).endswith("\n"))
 
 
 def rewrite_images(
@@ -109,10 +138,20 @@ def rewrite_images(
         r"(?P<prefix><img[^>]*?src=[\"'])(?P<src>[^\"']+)(?P<suffix>[\"'][^>]*?>)",
         flags=re.IGNORECASE,
     )
-    sign_pattern = re.compile(r"::sign-image\s+src:\s*(?P<src>\S+)")
+    sign_block_pattern = re.compile(
+        r"::sign-image\s*\n---\s*\n(?P<meta>.+?)\n---\s*\n::",
+        flags=re.DOTALL,
+    )
+    sign_inline_pattern = re.compile(
+        r"::sign-image(?:\s+|\s*\n)src:\s*(?P<src>\S+)(?:\s*\n:::+)?",
+    )
 
     transformers: list[tuple[re.Pattern[str], Callable[[Path, re.Match[str]], str]]] = [
-        (sign_pattern, lambda md, m: _rewrite_sign_image(md, m, image_resolver)),
+        (sign_block_pattern, lambda md, m: _rewrite_sign_block(md, m, image_resolver)),
+        (
+            sign_inline_pattern,
+            lambda md, m: _rewrite_sign_inline(md, m, image_resolver),
+        ),
         (
             markdown_pattern,
             lambda md, m: _rewrite_markdown_image(md, m, image_resolver),
