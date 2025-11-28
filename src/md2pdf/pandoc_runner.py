@@ -7,7 +7,9 @@ import subprocess
 from contextlib import nullcontext
 from typing import IO
 
-PANDOC_MARKDOWN_FORMAT = "markdown+yaml_metadata_block-tex_math_dollars-tex_math_single_backslash"
+PANDOC_MARKDOWN_FORMAT = (
+    "markdown+yaml_metadata_block-tex_math_dollars-tex_math_single_backslash"
+)
 
 
 def render(

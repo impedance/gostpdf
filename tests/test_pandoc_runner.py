@@ -8,7 +8,9 @@ from md2pdf.pandoc_runner import PANDOC_MARKDOWN_FORMAT, render
 
 
 class _StubProcess:
-    def __init__(self, returncode: int = 0, output: str = "", env: dict[str, str] | None = None) -> None:
+    def __init__(
+        self, returncode: int = 0, output: str = "", env: dict[str, str] | None = None
+    ) -> None:
         self.returncode = returncode
         self.stdout = io.StringIO(output)
         self.env = env or {}
@@ -83,7 +85,9 @@ def test_render_sets_texmfvar(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -
         return _StubProcess()
 
     monkeypatch.chdir(tmp_path)
-    monkeypatch.setattr(subprocess, "Popen", lambda *args, **kwargs: fake_run(*args, **kwargs))
+    monkeypatch.setattr(
+        subprocess, "Popen", lambda *args, **kwargs: fake_run(*args, **kwargs)
+    )
 
     render(Path("bundle.md"), Path("style.yaml"), Path("template.tex"), Path("out.pdf"))
 
@@ -102,7 +106,9 @@ def test_render_respects_existing_texmfvar(
         return _StubProcess()
 
     monkeypatch.setenv("TEXMFVAR", str(tmp_path / "cache"))
-    monkeypatch.setattr(subprocess, "Popen", lambda *args, **kwargs: fake_run(*args, **kwargs))
+    monkeypatch.setattr(
+        subprocess, "Popen", lambda *args, **kwargs: fake_run(*args, **kwargs)
+    )
 
     render(Path("bundle.md"), Path("style.yaml"), Path("template.tex"), Path("out.pdf"))
 
